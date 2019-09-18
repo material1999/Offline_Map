@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         map.setMultiTouchControls(true);
         IMapController mapController = map.getController();
         mapController.setZoom(9.5);
-        GeoPoint startPoint = new GeoPoint(48.8583, 2.2944);
+        GeoPoint startPoint = new GeoPoint(46.253, 20.1414);
         mapController.setCenter(startPoint);
     }
 
