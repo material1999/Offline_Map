@@ -10,9 +10,9 @@
     <org.osmdroid.views.MapView
         android:id="@+id/mapview"
         tilesource="Mapnik"
-        android:layout_width="409dp"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:layout_editor_absoluteX="1dp"
+        tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="127dp">
 
     </org.osmdroid.views.MapView>
@@ -23,6 +23,18 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:text="Hello" />
+
+    <Button
+        android:id="@+id/test_button"
+        android:layout_width="86dp"
+        android:layout_height="46dp"
+        android:text="Center"
+        app:layout_constraintBottom_toTopOf="@+id/mapview"
+        app:layout_constraintEnd_toStartOf="@+id/mapview"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/test_text"
+        app:layout_constraintVertical_bias="0.0" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
