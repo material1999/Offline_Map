@@ -1,5 +1,7 @@
 package com.example.osm;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -15,7 +17,6 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -25,13 +26,10 @@ import org.osmdroid.config.Configuration;
 import org.osmdroid.events.MapListener;
 import org.osmdroid.events.ScrollEvent;
 import org.osmdroid.events.ZoomEvent;
-import org.osmdroid.tileprovider.tilesource.BitmapTileSourceBase;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.Marker;
-import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.ScaleBarOverlay;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
@@ -42,7 +40,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.ArrayList;
 
 import static org.osmdroid.tileprovider.util.StreamUtils.copy;
 
@@ -51,10 +48,11 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int PERMISSION_REQUEST = 1;
 
+    int previous = 0;
     Database myDatabase;
     MapView map;
     TextView test_text;
-    Button test_button;
+    Button center_button;
     Context c;
     MyLocationNewOverlay myLocationOverlay;
     LocationManager myLocationManager;
@@ -132,6 +130,54 @@ public class MainActivity extends AppCompatActivity {
         mapController.setZoom(12.0);
     }
 
+    public int addMarkers(Cursor cursor, int previous) {
+        int added = 0;
+        map.getOverlays().clear();
+        cursor.moveToPosition(-1);
+        while (cursor.moveToNext()) {
+            Integer id = cursor.getInt(0);
+            String name = cursor.getString(1);
+            Double coordinatesX = cursor.getDouble(2);
+            Double coordinatesY = cursor.getDouble(3);
+            String type = cursor.getString(4);
+            String description = cursor.getString(5);
+            Marker marker = new Marker(map);
+            marker.setPosition(new GeoPoint(coordinatesX, coordinatesY));
+            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+            marker.setTitle(name);
+            marker.setSnippet(description);
+            marker.setSubDescription(type);
+            map.getOverlays().add(marker);
+            added++;
+        }
+        return added;
+    }
+
+    public int addMarkers(Cursor cursor, int previous, String category) {
+        int added = 0;
+        map.getOverlays().clear();
+        cursor.moveToPosition(-1);
+        while (cursor.moveToNext()) {
+            Integer id = cursor.getInt(0);
+            String name = cursor.getString(1);
+            Double coordinatesX = cursor.getDouble(2);
+            Double coordinatesY = cursor.getDouble(3);
+            String type = cursor.getString(4);
+            String description = cursor.getString(5);
+            if (type.contains(category)) {
+                Marker marker = new Marker(map);
+                marker.setPosition(new GeoPoint(coordinatesX, coordinatesY));
+                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                marker.setTitle(name);
+                marker.setSnippet(description);
+                marker.setSubDescription(type);
+                map.getOverlays().add(marker);
+                added++;
+            }
+        }
+        return added;
+    }
+
     @SuppressLint("MissingPermission")
     public void initializeMyGPS() {
         myLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -159,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Cursor cursor = myDatabase.getCursor();
+        final Cursor cursor = myDatabase.getCursor();
 
         String[] permissions = new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.WRITE_EXTERNAL_STORAGE};
@@ -175,8 +221,8 @@ public class MainActivity extends AppCompatActivity {
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 
             map = (MapView) findViewById(R.id.mapview);
-            test_button = (Button) findViewById(R.id.test_button);
-            test_button.setOnClickListener(new View.OnClickListener() {
+            center_button = (Button) findViewById(R.id.center_button);
+            center_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     myLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -186,6 +232,56 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+
+            ////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////////////////////////////////
+            Button all = (Button) findViewById(R.id.all);
+            all.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    previous = addMarkers(cursor, previous);
+                    map.getOverlays().add(myScaleBarOverlay);
+                    map.getOverlays().add(myLocationOverlay);
+                    map.postInvalidate();
+                    test_text.setText(Integer.toString(previous));
+                }
+            });
+            Button strand = (Button) findViewById(R.id.strand);
+            strand.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    previous = addMarkers(cursor, previous, "strand");
+                    map.getOverlays().add(myScaleBarOverlay);
+                    map.getOverlays().add(myLocationOverlay);
+                    map.postInvalidate();
+                    test_text.setText(Integer.toString(previous));
+                }
+            });
+            Button bolt = (Button) findViewById(R.id.bolt);
+            bolt.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    previous = addMarkers(cursor, previous, "bolt");
+                    map.getOverlays().add(myScaleBarOverlay);
+                    map.getOverlays().add(myLocationOverlay);
+                    map.postInvalidate();
+                    test_text.setText(Integer.toString(previous));
+                }
+            });
+            Button kikoto = (Button) findViewById(R.id.kikoto);
+            kikoto.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    previous = addMarkers(cursor, previous, "kikötő");
+                    map.getOverlays().add(myScaleBarOverlay);
+                    map.getOverlays().add(myLocationOverlay);
+                    map.postInvalidate();
+                    test_text.setText(Integer.toString(previous));
+                }
+            });
+            ////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////////////////////////////////
+
             myScaleBarOverlay = new ScaleBarOverlay(map);
             myScaleBarOverlay.setAlignBottom(true);
             myScaleBarOverlay.setAlignRight(true);
@@ -193,7 +289,6 @@ public class MainActivity extends AppCompatActivity {
             myScaleBarOverlay.setScaleBarOffset(50,50);
             myScaleBarOverlay.setTextSize(60);
             myScaleBarOverlay.setLineWidth(7);
-            map.getOverlays().add(myScaleBarOverlay);
 
             initializeMyMap();
             initializeMyGPS();
@@ -215,29 +310,12 @@ public class MainActivity extends AppCompatActivity {
             GeoPoint startPoint = new GeoPoint(46.253, 20.1414);
             mapController.setCenter(startPoint);
 
-            while (cursor.moveToNext()) {
-                String name = cursor.getString(1);
-                Double coordinatesX = cursor.getDouble(2);
-                Double coordinatesY = cursor.getDouble(3);
-                String type = cursor.getString(4);
-                String description = cursor.getString(5);
-                Marker marker = new Marker(map);
-                marker.setPosition(new GeoPoint(coordinatesX, coordinatesY));
-                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+            previous = addMarkers(cursor, previous);
+            test_text.setText(Integer.toString(previous));
 
-
-
-
-
-
-
-
-
-
-
-                map.getOverlays().add(marker);
-            }
+            map.getOverlays().add(myScaleBarOverlay);
             map.getOverlays().add(myLocationOverlay);
+
         } else {
             System.exit(1);
         }

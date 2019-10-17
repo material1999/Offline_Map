@@ -25,7 +25,7 @@
         android:text="" />
 
     <Button
-        android:id="@+id/test_button"
+        android:id="@+id/center_button"
         android:layout_width="86dp"
         android:layout_height="46dp"
         android:text="Center"
@@ -34,6 +34,54 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/test_text"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/all"
+        android:layout_width="86dp"
+        android:layout_height="46dp"
+        android:text="All"
+        app:layout_constraintBottom_toTopOf="@+id/mapview"
+        app:layout_constraintEnd_toStartOf="@+id/mapview"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/center_button"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/strand"
+        android:layout_width="86dp"
+        android:layout_height="46dp"
+        android:text="Strand"
+        app:layout_constraintBottom_toTopOf="@+id/mapview"
+        app:layout_constraintEnd_toStartOf="@+id/mapview"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/all"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/bolt"
+        android:layout_width="86dp"
+        android:layout_height="46dp"
+        android:text="Bolt"
+        app:layout_constraintBottom_toTopOf="@+id/mapview"
+        app:layout_constraintEnd_toStartOf="@+id/mapview"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/strand"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/kikoto"
+        android:layout_width="86dp"
+        android:layout_height="46dp"
+        android:text="Kikötő"
+        app:layout_constraintBottom_toTopOf="@+id/mapview"
+        app:layout_constraintEnd_toStartOf="@+id/mapview"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bolt"
         app:layout_constraintVertical_bias="0.0" />
 
 
