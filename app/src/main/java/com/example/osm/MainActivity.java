@@ -1,7 +1,5 @@
 package com.example.osm;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -17,6 +15,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -31,6 +30,7 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.ScaleBarOverlay;
+import org.osmdroid.views.overlay.infowindow.InfoWindow;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
@@ -48,7 +48,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int PERMISSION_REQUEST = 1;
 
-    int previous = 0;
+    XYTileSource myTileSource;
+    int search_results;
     Database myDatabase;
     MapView map;
     TextView test_text;
@@ -96,21 +97,24 @@ public class MainActivity extends AppCompatActivity {
         map.getOverlays().remove(myLocationOverlay);
     }
 
-    public void initializeMyMap () {
-        map.setUseDataConnection(false);
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        InfoWindow.closeAllInfoWindowsOn(map);
+        return super.dispatchTouchEvent(ev);
+    }
+
+    public XYTileSource initializeMyMap() {
         File tileDir = Configuration.getInstance().getOsmdroidBasePath();
-        File tileZipFile = new File(tileDir, "test_map.zip");
-        if (!tileZipFile.exists()){
-            try{
-                InputStream in = getAssets().open("test_map.zip");
-                OutputStream out = new FileOutputStream(tileZipFile);
-                copy(in,out);
+        File tileFile = new File(tileDir, "map.sqlite");
+        if (!tileFile.exists()) {
+            try {
+                InputStream in = getAssets().open("map.sqlite");
+                OutputStream out = new FileOutputStream(tileFile);
+                copy(in, out);
                 in.close();
-                //in = null;
                 out.flush();
                 out.close();
-                //out = null;
-            } catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -121,16 +125,29 @@ public class MainActivity extends AppCompatActivity {
                 256,
                 ".png",
                 new String[]{});
+        return tileSource;
+    }
+
+    public void loadMyMap(XYTileSource tileSource) {
+        map.setUseDataConnection(false);
         map.setTileSource(tileSource);
         map.setMaxZoomLevel(15.0);
-        map.setMinZoomLevel(10.0);
+        map.setMinZoomLevel(12.0);
         map.setMultiTouchControls(true);
         map.setClickable(true);
         mapController = map.getController();
         mapController.setZoom(12.0);
     }
 
-    public int addMarkers(Cursor cursor, int previous) {
+    @SuppressLint("MissingPermission")
+    public void initializeMyGPS() {
+        myLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        myLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, myLocationListener);
+        myLocationProvider = new GpsMyLocationProvider(c);
+        myLocationOverlay = new MyLocationNewOverlay(myLocationProvider, map);
+    }
+
+    public int addMarkers(Cursor cursor) {
         int added = 0;
         map.getOverlays().clear();
         cursor.moveToPosition(-1);
@@ -153,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
         return added;
     }
 
-    public int addMarkers(Cursor cursor, int previous, String category) {
+    public int addMarkers(Cursor cursor, String category) {
         int added = 0;
         map.getOverlays().clear();
         cursor.moveToPosition(-1);
@@ -178,24 +195,15 @@ public class MainActivity extends AppCompatActivity {
         return added;
     }
 
-    @SuppressLint("MissingPermission")
-    public void initializeMyGPS() {
-        myLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        myLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, myLocationListener);
-        myLocationProvider = new GpsMyLocationProvider(c);
-        myLocationOverlay = new MyLocationNewOverlay(myLocationProvider, map);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
         c = getApplicationContext();
-        Configuration.getInstance().setUserAgentValue(getPackageName());
         Configuration.getInstance().load(c, PreferenceManager.getDefaultSharedPreferences(c));
+        //Configuration.getInstance().setUserAgentValue(getPackageName());
+        Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
 
-        test_text = (TextView) findViewById(R.id.test_text);
         String fileName = "data.csv";
         myDatabase = new Database(this);
         SQLiteDatabase db = null;
@@ -207,8 +215,8 @@ public class MainActivity extends AppCompatActivity {
         }
         final Cursor cursor = myDatabase.getCursor();
 
-        String[] permissions = new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        String[] permissions = new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_FINE_LOCATION};
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             for (String p: permissions) {
                 if (ActivityCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
@@ -218,9 +226,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 
+            myTileSource = initializeMyMap();
+            setContentView(R.layout.activity_main);
             map = (MapView) findViewById(R.id.mapview);
+            loadMyMap(myTileSource);
+            initializeMyGPS();
+
+            test_text = (TextView) findViewById(R.id.test_text);
+
             center_button = (Button) findViewById(R.id.center_button);
             center_button.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -239,44 +255,56 @@ public class MainActivity extends AppCompatActivity {
             all.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    previous = addMarkers(cursor, previous);
+                    search_results = addMarkers(cursor);
                     map.getOverlays().add(myScaleBarOverlay);
                     map.getOverlays().add(myLocationOverlay);
                     map.postInvalidate();
-                    test_text.setText(Integer.toString(previous));
+                    test_text.setText(Integer.toString(search_results));
+                }
+            });
+            Button none = (Button) findViewById(R.id.none);
+            none.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    search_results = 0;
+                    map.getOverlays().clear();
+                    map.getOverlays().add(myScaleBarOverlay);
+                    map.getOverlays().add(myLocationOverlay);
+                    map.postInvalidate();
+                    test_text.setText(Integer.toString(search_results));
                 }
             });
             Button strand = (Button) findViewById(R.id.strand);
             strand.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    previous = addMarkers(cursor, previous, "strand");
+                    search_results = addMarkers(cursor, "strand");
                     map.getOverlays().add(myScaleBarOverlay);
                     map.getOverlays().add(myLocationOverlay);
                     map.postInvalidate();
-                    test_text.setText(Integer.toString(previous));
+                    test_text.setText(Integer.toString(search_results));
                 }
             });
             Button bolt = (Button) findViewById(R.id.bolt);
             bolt.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    previous = addMarkers(cursor, previous, "bolt");
+                    search_results = addMarkers(cursor, "bolt");
                     map.getOverlays().add(myScaleBarOverlay);
                     map.getOverlays().add(myLocationOverlay);
                     map.postInvalidate();
-                    test_text.setText(Integer.toString(previous));
+                    test_text.setText(Integer.toString(search_results));
                 }
             });
             Button kikoto = (Button) findViewById(R.id.kikoto);
             kikoto.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    previous = addMarkers(cursor, previous, "kikötő");
+                    search_results = addMarkers(cursor, "kikötő");
                     map.getOverlays().add(myScaleBarOverlay);
                     map.getOverlays().add(myLocationOverlay);
                     map.postInvalidate();
-                    test_text.setText(Integer.toString(previous));
+                    test_text.setText(Integer.toString(search_results));
                 }
             });
             ////////////////////////////////////////////////////////////////////
@@ -289,9 +317,6 @@ public class MainActivity extends AppCompatActivity {
             myScaleBarOverlay.setScaleBarOffset(50,50);
             myScaleBarOverlay.setTextSize(60);
             myScaleBarOverlay.setLineWidth(7);
-
-            initializeMyMap();
-            initializeMyGPS();
 
             map.addMapListener(new MapListener() {
                 @Override
@@ -307,18 +332,53 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+            //map.setScrollableAreaLimitDouble(map.getBoundingBox());
+            //map.computeScroll();
+
+            //test_text.setText(Double.toString(map.getBoundingBox().getLonEast()));
+            map.setScrollableAreaLimitLatitude(46.55, 46.08, 0);
+            map.setScrollableAreaLimitLongitude(19.78, 20.38, 0);
+
             GeoPoint startPoint = new GeoPoint(46.253, 20.1414);
             mapController.setCenter(startPoint);
 
-            previous = addMarkers(cursor, previous);
-            test_text.setText(Integer.toString(previous));
+            search_results = addMarkers(cursor);
+            test_text.setText(Integer.toString(search_results));
+            //test_text.setText(Configuration.getInstance().getOsmdroidTileCache().toString());
 
             map.getOverlays().add(myScaleBarOverlay);
             map.getOverlays().add(myLocationOverlay);
+
+            /*
+            RotationGestureOverlay rotationGestureOverlay = new RotationGestureOverlay(map);
+            rotationGestureOverlay.setEnabled(true);
+            map.getOverlays().add(rotationGestureOverlay);
+            */
+
+            /*
+            test_text.setText(Boolean.toString(getDatabasePath("places.db").exists()));
+            File output = new File(Configuration.getInstance().getOsmdroidBasePath(), "copy.db");
+            File file = new File(getDatabasePath("places.db").toString());
+            if (!output.exists()){
+                try{
+                    InputStream in = new FileInputStream(file);
+                    OutputStream out = new FileOutputStream(output);
+                    copy(in,out);
+                    in.close();
+                    //in = null;
+                    out.flush();
+                    out.close();
+                    //out = null;
+                    test_text.setText("Siker");
+                } catch (IOException e){
+                    e.printStackTrace();
+                    test_text.setText("Nem siker");
+                }
+            }
+            */
 
         } else {
             System.exit(1);
         }
     }
 }
-
