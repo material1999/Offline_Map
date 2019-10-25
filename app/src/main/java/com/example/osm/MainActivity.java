@@ -8,6 +8,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationListener;
@@ -15,6 +16,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.ContactsContract;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -35,22 +37,25 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.file.Files;
 
 import static org.osmdroid.tileprovider.util.StreamUtils.copy;
 
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int PERMISSION_REQUEST = 1;
+    private DatabaseHelper mDBHelper;
+    private SQLiteDatabase mDb;
 
+    private static final int PERMISSION_REQUEST = 1;
     XYTileSource myTileSource;
     int search_results;
-    Database myDatabase;
     MapView map;
     TextView test_text;
     Button center_button;
@@ -147,50 +152,73 @@ public class MainActivity extends AppCompatActivity {
         myLocationOverlay = new MyLocationNewOverlay(myLocationProvider, map);
     }
 
-    public int addMarkers(Cursor cursor) {
+    public int addMarkers(Cursor placesCursor, Cursor subcategoriesPlacesCursor, Cursor subcategoriesCursor) {
         int added = 0;
+        String type;
         map.getOverlays().clear();
-        cursor.moveToPosition(-1);
-        while (cursor.moveToNext()) {
-            Integer id = cursor.getInt(0);
-            String name = cursor.getString(1);
-            Double coordinatesX = cursor.getDouble(2);
-            Double coordinatesY = cursor.getDouble(3);
-            String type = cursor.getString(4);
-            String description = cursor.getString(5);
+        placesCursor.moveToPosition(-1);
+        while (placesCursor.moveToNext()) {
             Marker marker = new Marker(map);
+            Double coordinatesX = placesCursor.getDouble(1);
+            Double coordinatesY = placesCursor.getDouble(2);
+            String name = placesCursor.getString(4);
+            String description = placesCursor.getString(7);
             marker.setPosition(new GeoPoint(coordinatesX, coordinatesY));
             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
             marker.setTitle(name);
             marker.setSnippet(description);
+            subcategoriesPlacesCursor.moveToPosition(-1);
+            type = "";
+            while (subcategoriesPlacesCursor.moveToNext()) {
+                if (placesCursor.getInt(0) == subcategoriesPlacesCursor.getInt(1)) {
+                    subcategoriesCursor.moveToPosition(-1);
+                    while (subcategoriesCursor.moveToNext()) {
+                        if (subcategoriesCursor.getInt(4) == subcategoriesPlacesCursor.getInt(2)) {
+                            type += subcategoriesCursor.getString(1) + ", ";
+                        }
+                    }
+                }
+            }
+            type = type.substring(0, type.length() - 2);
             marker.setSubDescription(type);
-            map.getOverlays().add(marker);
             added++;
+            map.getOverlays().add(marker);
         }
         return added;
     }
 
-    public int addMarkers(Cursor cursor, String category) {
+    public int addMarkers(Cursor placesCursor, Cursor subcategoriesPlacesCursor, Cursor subcategoriesCursor, int subcategory_id) {
         int added = 0;
+        String type;
         map.getOverlays().clear();
-        cursor.moveToPosition(-1);
-        while (cursor.moveToNext()) {
-            Integer id = cursor.getInt(0);
-            String name = cursor.getString(1);
-            Double coordinatesX = cursor.getDouble(2);
-            Double coordinatesY = cursor.getDouble(3);
-            String type = cursor.getString(4);
-            String description = cursor.getString(5);
-            if (type.contains(category)) {
-                Marker marker = new Marker(map);
-                marker.setPosition(new GeoPoint(coordinatesX, coordinatesY));
-                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-                marker.setTitle(name);
-                marker.setSnippet(description);
-                marker.setSubDescription(type);
-                map.getOverlays().add(marker);
-                added++;
+        placesCursor.moveToPosition(-1);
+        while (placesCursor.moveToNext()) {
+            Marker marker = new Marker(map);
+            subcategoriesPlacesCursor.moveToPosition(-1);
+            type = "";
+            while (subcategoriesPlacesCursor.moveToNext()) {
+                if (placesCursor.getInt(0) == subcategoriesPlacesCursor.getInt(1) &&
+                        subcategoriesPlacesCursor.getInt(2) == subcategory_id) {
+                    Double coordinatesX = placesCursor.getDouble(1);
+                    Double coordinatesY = placesCursor.getDouble(2);
+                    String name = placesCursor.getString(4);
+                    String description = placesCursor.getString(7);
+                    subcategoriesCursor.moveToPosition(-1);
+                    while (subcategoriesCursor.moveToNext()) {
+                        if (subcategoriesCursor.getInt(4) == subcategoriesPlacesCursor.getInt(2)) {
+                            type += subcategoriesCursor.getString(1) + ", ";
+                        }
+                    }
+                    type = type.substring(0, type.length() - 2);
+                    marker.setPosition(new GeoPoint(coordinatesX, coordinatesY));
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                    marker.setTitle(name);
+                    marker.setSnippet(description);
+                    marker.setSubDescription(type);
+                }
             }
+            map.getOverlays().add(marker);
+            added++;
         }
         return added;
     }
@@ -203,17 +231,6 @@ public class MainActivity extends AppCompatActivity {
         Configuration.getInstance().load(c, PreferenceManager.getDefaultSharedPreferences(c));
         //Configuration.getInstance().setUserAgentValue(getPackageName());
         Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
-
-        String fileName = "data.csv";
-        myDatabase = new Database(this);
-        SQLiteDatabase db = null;
-        try {
-            InputStreamReader is = new InputStreamReader(getAssets().open(fileName));
-            db = myDatabase.addData(is, c);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        final Cursor cursor = myDatabase.getCursor();
 
         String[] permissions = new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.ACCESS_FINE_LOCATION};
@@ -228,6 +245,23 @@ public class MainActivity extends AppCompatActivity {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+            mDBHelper = new DatabaseHelper(this);
+            try {
+                mDBHelper.updateDataBase();
+            } catch (IOException mIOException) {
+                throw new Error("UnableToUpdateDatabase");
+            }
+            try {
+                mDb = mDBHelper.getWritableDatabase();
+            } catch (SQLException mSQLException) {
+                throw mSQLException;
+            }
+
+            final Cursor placesCursor = mDBHelper.getCursor("places");
+            final Cursor categoriesCursor = mDBHelper.getCursor("categories");
+            final Cursor subcategoriesCursor = mDBHelper.getCursor("subcategories");
+            final Cursor subcategoriesPlacesCursor = mDBHelper.getCursor("subcategoriesPlaces");
 
             myTileSource = initializeMyMap();
             setContentView(R.layout.activity_main);
@@ -248,14 +282,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-
             ////////////////////////////////////////////////////////////////////
             ////////////////////////////////////////////////////////////////////
             Button all = (Button) findViewById(R.id.all);
             all.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    search_results = addMarkers(cursor);
+                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
                     map.getOverlays().add(myScaleBarOverlay);
                     map.getOverlays().add(myLocationOverlay);
                     map.postInvalidate();
@@ -274,17 +307,29 @@ public class MainActivity extends AppCompatActivity {
                     test_text.setText(Integer.toString(search_results));
                 }
             });
-            Button strand = (Button) findViewById(R.id.strand);
-            strand.setOnClickListener(new View.OnClickListener() {
+            Button kikoto = (Button) findViewById(R.id.kikoto);
+            kikoto.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    search_results = addMarkers(cursor, "strand");
+                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor, 1);
                     map.getOverlays().add(myScaleBarOverlay);
                     map.getOverlays().add(myLocationOverlay);
                     map.postInvalidate();
                     test_text.setText(Integer.toString(search_results));
                 }
             });
+            Button strand = (Button) findViewById(R.id.strand);
+            strand.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor, 2);
+                    map.getOverlays().add(myScaleBarOverlay);
+                    map.getOverlays().add(myLocationOverlay);
+                    map.postInvalidate();
+                    test_text.setText(Integer.toString(search_results));
+                }
+            });
+            /*
             Button bolt = (Button) findViewById(R.id.bolt);
             bolt.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -296,17 +341,7 @@ public class MainActivity extends AppCompatActivity {
                     test_text.setText(Integer.toString(search_results));
                 }
             });
-            Button kikoto = (Button) findViewById(R.id.kikoto);
-            kikoto.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    search_results = addMarkers(cursor, "kikötő");
-                    map.getOverlays().add(myScaleBarOverlay);
-                    map.getOverlays().add(myLocationOverlay);
-                    map.postInvalidate();
-                    test_text.setText(Integer.toString(search_results));
-                }
-            });
+            */
             ////////////////////////////////////////////////////////////////////
             ////////////////////////////////////////////////////////////////////
 
@@ -342,9 +377,16 @@ public class MainActivity extends AppCompatActivity {
             GeoPoint startPoint = new GeoPoint(46.253, 20.1414);
             mapController.setCenter(startPoint);
 
-            search_results = addMarkers(cursor);
+            search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
             test_text.setText(Integer.toString(search_results));
-            //test_text.setText(Configuration.getInstance().getOsmdroidTileCache().toString());
+
+            /*
+            File f = new File(c.getApplicationInfo().dataDir + "/databases/");
+            File[] paths = f.listFiles();
+            for (File path : paths) {
+                System.out.println(path);
+            }
+            */
 
             map.getOverlays().add(myScaleBarOverlay);
             map.getOverlays().add(myLocationOverlay);
@@ -355,27 +397,6 @@ public class MainActivity extends AppCompatActivity {
             map.getOverlays().add(rotationGestureOverlay);
             */
 
-            /*
-            test_text.setText(Boolean.toString(getDatabasePath("places.db").exists()));
-            File output = new File(Configuration.getInstance().getOsmdroidBasePath(), "copy.db");
-            File file = new File(getDatabasePath("places.db").toString());
-            if (!output.exists()){
-                try{
-                    InputStream in = new FileInputStream(file);
-                    OutputStream out = new FileOutputStream(output);
-                    copy(in,out);
-                    in.close();
-                    //in = null;
-                    out.flush();
-                    out.close();
-                    //out = null;
-                    test_text.setText("Siker");
-                } catch (IOException e){
-                    e.printStackTrace();
-                    test_text.setText("Nem siker");
-                }
-            }
-            */
 
         } else {
             System.exit(1);
