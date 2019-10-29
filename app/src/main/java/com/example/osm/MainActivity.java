@@ -16,7 +16,6 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.ContactsContract;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -37,13 +36,10 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.nio.file.Files;
 
 import static org.osmdroid.tileprovider.util.StreamUtils.copy;
 
@@ -52,7 +48,12 @@ public class MainActivity extends AppCompatActivity {
 
     private DatabaseHelper mDBHelper;
     private SQLiteDatabase mDb;
-
+    Cursor placesCursor;
+    Cursor categoriesCursor;
+    Cursor subcategoriesCursor;
+    Cursor subcategoriesPlacesCursor;
+    Cursor settingsCursor;
+    int language; //0 - HUN, 1 - ENG, 2 - SRB
     private static final int PERMISSION_REQUEST = 1;
     XYTileSource myTileSource;
     int search_results;
@@ -161,8 +162,8 @@ public class MainActivity extends AppCompatActivity {
             Marker marker = new Marker(map);
             Double coordinatesX = placesCursor.getDouble(1);
             Double coordinatesY = placesCursor.getDouble(2);
-            String name = placesCursor.getString(4);
-            String description = placesCursor.getString(7);
+            String name = placesCursor.getString(4 + language);
+            String description = placesCursor.getString(7 + language);
             marker.setPosition(new GeoPoint(coordinatesX, coordinatesY));
             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
             marker.setTitle(name);
@@ -174,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
                     subcategoriesCursor.moveToPosition(-1);
                     while (subcategoriesCursor.moveToNext()) {
                         if (subcategoriesCursor.getInt(4) == subcategoriesPlacesCursor.getInt(2)) {
-                            type += subcategoriesCursor.getString(1) + ", ";
+                            type += subcategoriesCursor.getString(1 + language) + ", ";
                         }
                     }
                 }
@@ -201,12 +202,12 @@ public class MainActivity extends AppCompatActivity {
                         subcategoriesPlacesCursor.getInt(2) == subcategory_id) {
                     Double coordinatesX = placesCursor.getDouble(1);
                     Double coordinatesY = placesCursor.getDouble(2);
-                    String name = placesCursor.getString(4);
-                    String description = placesCursor.getString(7);
+                    String name = placesCursor.getString(4 + language);
+                    String description = placesCursor.getString(7 + language);
                     subcategoriesCursor.moveToPosition(-1);
                     while (subcategoriesCursor.moveToNext()) {
                         if (subcategoriesCursor.getInt(4) == subcategoriesPlacesCursor.getInt(2)) {
-                            type += subcategoriesCursor.getString(1) + ", ";
+                            type += subcategoriesCursor.getString(1 + language) + ", ";
                         }
                     }
                     type = type.substring(0, type.length() - 2);
@@ -221,6 +222,15 @@ public class MainActivity extends AppCompatActivity {
             added++;
         }
         return added;
+    }
+
+    public void setLanguage(int language) {
+        mDBHelper.setLanguage(language);
+    }
+
+    public int getLanguage(Cursor settingsCursor) {
+        settingsCursor.moveToPosition(0);
+        return settingsCursor.getInt(1);
     }
 
     @Override
@@ -258,10 +268,13 @@ public class MainActivity extends AppCompatActivity {
                 throw mSQLException;
             }
 
-            final Cursor placesCursor = mDBHelper.getCursor("places");
-            final Cursor categoriesCursor = mDBHelper.getCursor("categories");
-            final Cursor subcategoriesCursor = mDBHelper.getCursor("subcategories");
-            final Cursor subcategoriesPlacesCursor = mDBHelper.getCursor("subcategoriesPlaces");
+            placesCursor = mDBHelper.getCursor("places");
+            categoriesCursor = mDBHelper.getCursor("categories");
+            subcategoriesCursor = mDBHelper.getCursor("subcategories");
+            subcategoriesPlacesCursor = mDBHelper.getCursor("subcategoriesPlaces");
+            settingsCursor = mDBHelper.getCursor("settings");
+
+            language = getLanguage(settingsCursor);
 
             myTileSource = initializeMyMap();
             setContentView(R.layout.activity_main);
@@ -329,6 +342,27 @@ public class MainActivity extends AppCompatActivity {
                     test_text.setText(Integer.toString(search_results));
                 }
             });
+            Button hun = (Button) findViewById(R.id.hun);
+            hun.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    setLanguage(0);
+                    settingsCursor = mDBHelper.getCursor("settings");
+                    language = getLanguage(settingsCursor);
+                    test_text.setText(Integer.toString(getLanguage(settingsCursor)));
+
+                }
+            });
+            Button eng = (Button) findViewById(R.id.eng);
+            eng.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    setLanguage(1);
+                    settingsCursor = mDBHelper.getCursor("settings");
+                    language = getLanguage(settingsCursor);
+                    test_text.setText(Integer.toString(getLanguage(settingsCursor)));
+                }
+            });
             /*
             Button bolt = (Button) findViewById(R.id.bolt);
             bolt.setOnClickListener(new View.OnClickListener() {
@@ -378,7 +412,8 @@ public class MainActivity extends AppCompatActivity {
             mapController.setCenter(startPoint);
 
             search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
-            test_text.setText(Integer.toString(search_results));
+            //test_text.setText(Integer.toString(search_results));
+            test_text.setText(Integer.toString(getLanguage(settingsCursor)));
 
             /*
             File f = new File(c.getApplicationInfo().dataDir + "/databases/");

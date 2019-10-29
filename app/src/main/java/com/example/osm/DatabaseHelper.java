@@ -99,4 +99,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor res = db.rawQuery("select * from " + table_name, null);
         return res;
     }
+
+    public void setLanguage(int language) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("UPDATE settings SET APP_LANGUAGE = " + language);
+    }
 }
