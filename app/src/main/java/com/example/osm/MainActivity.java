@@ -48,13 +48,13 @@ import static org.osmdroid.tileprovider.util.StreamUtils.copy;
 public class MainActivity extends AppCompatActivity {
 
     private DatabaseHelper mDBHelper;
-    private SQLiteDatabase mDb;
+    //private SQLiteDatabase mDb;
     Cursor placesCursor;
     Cursor categoriesCursor;
     Cursor subcategoriesCursor;
     Cursor subcategoriesPlacesCursor;
     Cursor settingsCursor;
-    int language; //0 - HUN, 1 - ENG, 2 - SRB
+    int language; //0-HUN, 1-ENG, 2-SRB
     ArrayList<Integer> show = new ArrayList<>();
     private static final int PERMISSION_REQUEST = 1;
     XYTileSource myTileSource;
@@ -235,11 +235,13 @@ public class MainActivity extends AppCompatActivity {
             } catch (IOException mIOException) {
                 throw new Error("UnableToUpdateDatabase");
             }
+            /*
             try {
                 mDb = mDBHelper.getWritableDatabase();
             } catch (SQLException mSQLException) {
                 throw mSQLException;
             }
+            */
 
             placesCursor = mDBHelper.getCursor("places");
             categoriesCursor = mDBHelper.getCursor("categories");
@@ -355,19 +357,6 @@ public class MainActivity extends AppCompatActivity {
                     test_text.setText(Integer.toString(language));
                 }
             });
-            /*
-            Button bolt = (Button) findViewById(R.id.bolt);
-            bolt.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    search_results = addMarkers(cursor, "bolt");
-                    map.getOverlays().add(myScaleBarOverlay);
-                    map.getOverlays().add(myLocationOverlay);
-                    map.postInvalidate();
-                    test_text.setText(Integer.toString(search_results));
-                }
-            });
-            */
             ////////////////////////////////////////////////////////////////////
             ////////////////////////////////////////////////////////////////////
 
@@ -429,7 +418,6 @@ public class MainActivity extends AppCompatActivity {
             rotationGestureOverlay.setEnabled(true);
             map.getOverlays().add(rotationGestureOverlay);
             */
-
 
         } else {
             System.exit(1);
