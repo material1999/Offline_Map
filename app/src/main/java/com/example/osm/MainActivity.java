@@ -40,6 +40,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 
 import static org.osmdroid.tileprovider.util.StreamUtils.copy;
 
@@ -54,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     Cursor subcategoriesPlacesCursor;
     Cursor settingsCursor;
     int language; //0 - HUN, 1 - ENG, 2 - SRB
+    ArrayList<Integer> show = new ArrayList<>();
     private static final int PERMISSION_REQUEST = 1;
     XYTileSource myTileSource;
     int search_results;
@@ -160,66 +162,37 @@ public class MainActivity extends AppCompatActivity {
         placesCursor.moveToPosition(-1);
         while (placesCursor.moveToNext()) {
             Marker marker = new Marker(map);
-            Double coordinatesX = placesCursor.getDouble(1);
-            Double coordinatesY = placesCursor.getDouble(2);
-            String name = placesCursor.getString(4 + language);
-            String description = placesCursor.getString(7 + language);
-            marker.setPosition(new GeoPoint(coordinatesX, coordinatesY));
-            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-            marker.setTitle(name);
-            marker.setSnippet(description);
-            subcategoriesPlacesCursor.moveToPosition(-1);
             type = "";
+            subcategoriesPlacesCursor.moveToPosition(-1);
             while (subcategoriesPlacesCursor.moveToNext()) {
-                if (placesCursor.getInt(0) == subcategoriesPlacesCursor.getInt(1)) {
-                    subcategoriesCursor.moveToPosition(-1);
-                    while (subcategoriesCursor.moveToNext()) {
-                        if (subcategoriesCursor.getInt(4) == subcategoriesPlacesCursor.getInt(2)) {
-                            type += subcategoriesCursor.getString(1 + language) + ", ";
-                        }
+                subcategoriesCursor.moveToPosition(-1);
+                while (subcategoriesCursor.moveToNext()) {
+                    if (placesCursor.getInt(0) == subcategoriesPlacesCursor.getInt(1) &&
+                            subcategoriesPlacesCursor.getInt(2) == subcategoriesCursor.getInt(0)) {
+                        type += subcategoriesCursor.getString(1 + language) + ", ";
                     }
                 }
             }
-            type = type.substring(0, type.length() - 2);
-            marker.setSubDescription(type);
-            added++;
-            map.getOverlays().add(marker);
-        }
-        return added;
-    }
-
-    public int addMarkers(Cursor placesCursor, Cursor subcategoriesPlacesCursor, Cursor subcategoriesCursor, int subcategory_id) {
-        int added = 0;
-        String type;
-        map.getOverlays().clear();
-        placesCursor.moveToPosition(-1);
-        while (placesCursor.moveToNext()) {
-            Marker marker = new Marker(map);
+            if (!type.equals("")) type = type.substring(0, type.length() - 2);
+            System.out.println(type);
             subcategoriesPlacesCursor.moveToPosition(-1);
-            type = "";
             while (subcategoriesPlacesCursor.moveToNext()) {
                 if (placesCursor.getInt(0) == subcategoriesPlacesCursor.getInt(1) &&
-                        subcategoriesPlacesCursor.getInt(2) == subcategory_id) {
+                        show.contains(subcategoriesPlacesCursor.getInt(2))) {
                     Double coordinatesX = placesCursor.getDouble(1);
                     Double coordinatesY = placesCursor.getDouble(2);
                     String name = placesCursor.getString(4 + language);
                     String description = placesCursor.getString(7 + language);
-                    subcategoriesCursor.moveToPosition(-1);
-                    while (subcategoriesCursor.moveToNext()) {
-                        if (subcategoriesCursor.getInt(4) == subcategoriesPlacesCursor.getInt(2)) {
-                            type += subcategoriesCursor.getString(1 + language) + ", ";
-                        }
-                    }
-                    type = type.substring(0, type.length() - 2);
                     marker.setPosition(new GeoPoint(coordinatesX, coordinatesY));
                     marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
                     marker.setTitle(name);
                     marker.setSnippet(description);
                     marker.setSubDescription(type);
+                    added++;
+                    map.getOverlays().add(marker);
+                    break;
                 }
             }
-            map.getOverlays().add(marker);
-            added++;
         }
         return added;
     }
@@ -301,9 +274,14 @@ public class MainActivity extends AppCompatActivity {
             all.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    subcategoriesCursor.moveToPosition(-1);
+                    show.clear();
+                    while (subcategoriesCursor.moveToNext()) {
+                        show.add(subcategoriesCursor.getInt(0));
+                    }
                     search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
-                    map.getOverlays().add(myScaleBarOverlay);
                     map.getOverlays().add(myLocationOverlay);
+                    map.getOverlays().add(myScaleBarOverlay);
                     map.postInvalidate();
                     test_text.setText(Integer.toString(search_results));
                 }
@@ -312,10 +290,11 @@ public class MainActivity extends AppCompatActivity {
             none.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    show.clear();
                     search_results = 0;
                     map.getOverlays().clear();
-                    map.getOverlays().add(myScaleBarOverlay);
                     map.getOverlays().add(myLocationOverlay);
+                    map.getOverlays().add(myScaleBarOverlay);
                     map.postInvalidate();
                     test_text.setText(Integer.toString(search_results));
                 }
@@ -324,9 +303,12 @@ public class MainActivity extends AppCompatActivity {
             kikoto.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor, 1);
-                    map.getOverlays().add(myScaleBarOverlay);
+                    show.clear();
+                    show.add(1);
+                    System.out.println(show);
+                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
                     map.getOverlays().add(myLocationOverlay);
+                    map.getOverlays().add(myScaleBarOverlay);
                     map.postInvalidate();
                     test_text.setText(Integer.toString(search_results));
                 }
@@ -335,9 +317,12 @@ public class MainActivity extends AppCompatActivity {
             strand.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor, 2);
-                    map.getOverlays().add(myScaleBarOverlay);
+                    show.clear();
+                    show.add(2);
+                    System.out.println(show);
+                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
                     map.getOverlays().add(myLocationOverlay);
+                    map.getOverlays().add(myScaleBarOverlay);
                     map.postInvalidate();
                     test_text.setText(Integer.toString(search_results));
                 }
@@ -349,8 +334,11 @@ public class MainActivity extends AppCompatActivity {
                     setLanguage(0);
                     settingsCursor = mDBHelper.getCursor("settings");
                     language = getLanguage(settingsCursor);
-                    test_text.setText(Integer.toString(getLanguage(settingsCursor)));
-
+                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
+                    map.getOverlays().add(myLocationOverlay);
+                    map.getOverlays().add(myScaleBarOverlay);
+                    map.postInvalidate();
+                    test_text.setText(Integer.toString(language));
                 }
             });
             Button eng = (Button) findViewById(R.id.eng);
@@ -360,7 +348,11 @@ public class MainActivity extends AppCompatActivity {
                     setLanguage(1);
                     settingsCursor = mDBHelper.getCursor("settings");
                     language = getLanguage(settingsCursor);
-                    test_text.setText(Integer.toString(getLanguage(settingsCursor)));
+                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
+                    map.getOverlays().add(myLocationOverlay);
+                    map.getOverlays().add(myScaleBarOverlay);
+                    map.postInvalidate();
+                    test_text.setText(Integer.toString(language));
                 }
             });
             /*
@@ -411,9 +403,15 @@ public class MainActivity extends AppCompatActivity {
             GeoPoint startPoint = new GeoPoint(46.253, 20.1414);
             mapController.setCenter(startPoint);
 
+            subcategoriesCursor.moveToPosition(-1);
+            show.clear();
+            while (subcategoriesCursor.moveToNext()) {
+                show.add(subcategoriesCursor.getInt(0));
+            }
             search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
-            //test_text.setText(Integer.toString(search_results));
-            test_text.setText(Integer.toString(getLanguage(settingsCursor)));
+
+            test_text.setText(Integer.toString(search_results));
+            //test_text.setText(Integer.toString(getLanguage(settingsCursor)));
 
             /*
             File f = new File(c.getApplicationInfo().dataDir + "/databases/");
@@ -423,8 +421,8 @@ public class MainActivity extends AppCompatActivity {
             }
             */
 
-            map.getOverlays().add(myScaleBarOverlay);
             map.getOverlays().add(myLocationOverlay);
+            map.getOverlays().add(myScaleBarOverlay);
 
             /*
             RotationGestureOverlay rotationGestureOverlay = new RotationGestureOverlay(map);
