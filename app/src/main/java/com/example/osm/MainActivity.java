@@ -8,8 +8,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -61,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     int search_results;
     MapView map;
     TextView test_text;
-    Button center_button;
+    Button center_button, all_button, none_button, kikoto, strand;
     Context c;
     MyLocationNewOverlay myLocationOverlay;
     LocationManager myLocationManager;
@@ -174,7 +172,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             if (!type.equals("")) type = type.substring(0, type.length() - 2);
-            System.out.println(type);
             subcategoriesPlacesCursor.moveToPosition(-1);
             while (subcategoriesPlacesCursor.moveToNext()) {
                 if (placesCursor.getInt(0) == subcategoriesPlacesCursor.getInt(1) &&
@@ -204,6 +201,30 @@ public class MainActivity extends AppCompatActivity {
     public int getLanguage(Cursor settingsCursor) {
         settingsCursor.moveToPosition(0);
         return settingsCursor.getInt(1);
+    }
+
+    public void renameUI() {
+        switch (language) {
+            case 0:
+                center_button.setText("Középre");
+                all_button.setText("Minden");
+                none_button.setText("Semmi");
+                break;
+            case 1:
+                center_button.setText("Center");
+                all_button.setText("All");
+                none_button.setText("None");
+                break;
+            case 2:
+                center_button.setText("[szerb]");
+                all_button.setText("[szerb]");
+                none_button.setText("[szerb]");
+                break;
+        }
+        subcategoriesCursor.moveToPosition(0);
+        kikoto.setText(subcategoriesCursor.getString(1 + language));
+        subcategoriesCursor.moveToNext();
+        strand.setText(subcategoriesCursor.getString(1 + language));
     }
 
     @Override
@@ -272,8 +293,8 @@ public class MainActivity extends AppCompatActivity {
 
             ////////////////////////////////////////////////////////////////////
             ////////////////////////////////////////////////////////////////////
-            Button all = (Button) findViewById(R.id.all);
-            all.setOnClickListener(new View.OnClickListener() {
+            all_button = (Button) findViewById(R.id.all);
+            all_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     subcategoriesCursor.moveToPosition(-1);
@@ -288,8 +309,8 @@ public class MainActivity extends AppCompatActivity {
                     test_text.setText(Integer.toString(search_results));
                 }
             });
-            Button none = (Button) findViewById(R.id.none);
-            none.setOnClickListener(new View.OnClickListener() {
+            none_button = (Button) findViewById(R.id.none);
+            none_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     show.clear();
@@ -301,13 +322,12 @@ public class MainActivity extends AppCompatActivity {
                     test_text.setText(Integer.toString(search_results));
                 }
             });
-            Button kikoto = (Button) findViewById(R.id.kikoto);
+            kikoto = (Button) findViewById(R.id.kikoto);
             kikoto.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     show.clear();
                     show.add(1);
-                    System.out.println(show);
                     search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
                     map.getOverlays().add(myLocationOverlay);
                     map.getOverlays().add(myScaleBarOverlay);
@@ -315,13 +335,12 @@ public class MainActivity extends AppCompatActivity {
                     test_text.setText(Integer.toString(search_results));
                 }
             });
-            Button strand = (Button) findViewById(R.id.strand);
+            strand = (Button) findViewById(R.id.strand);
             strand.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     show.clear();
                     show.add(2);
-                    System.out.println(show);
                     search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
                     map.getOverlays().add(myLocationOverlay);
                     map.getOverlays().add(myScaleBarOverlay);
@@ -340,6 +359,7 @@ public class MainActivity extends AppCompatActivity {
                     map.getOverlays().add(myLocationOverlay);
                     map.getOverlays().add(myScaleBarOverlay);
                     map.postInvalidate();
+                    renameUI();
                     test_text.setText(Integer.toString(language));
                 }
             });
@@ -354,6 +374,7 @@ public class MainActivity extends AppCompatActivity {
                     map.getOverlays().add(myLocationOverlay);
                     map.getOverlays().add(myScaleBarOverlay);
                     map.postInvalidate();
+                    renameUI();
                     test_text.setText(Integer.toString(language));
                 }
             });
@@ -391,6 +412,8 @@ public class MainActivity extends AppCompatActivity {
 
             GeoPoint startPoint = new GeoPoint(46.253, 20.1414);
             mapController.setCenter(startPoint);
+
+            renameUI();
 
             subcategoriesCursor.moveToPosition(-1);
             show.clear();
