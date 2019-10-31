@@ -2,12 +2,16 @@ package com.example.osm;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.res.ResourcesCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -45,28 +49,29 @@ import static org.osmdroid.tileprovider.util.StreamUtils.copy;
 
 public class MainActivity extends AppCompatActivity {
 
-    private DatabaseHelper mDBHelper;
-    //private SQLiteDatabase mDb;
+    DatabaseHelper databaseHelper;
     Cursor placesCursor;
     Cursor categoriesCursor;
     Cursor subcategoriesCursor;
     Cursor subcategoriesPlacesCursor;
     Cursor settingsCursor;
-    int language; //0-HUN, 1-ENG, 2-SRB
+    int language; // 0-HUN, 1-ENG, 2-SRB
+    int chosenId = 0;
     ArrayList<Integer> show = new ArrayList<>();
-    private static final int PERMISSION_REQUEST = 1;
-    XYTileSource myTileSource;
+    static final int PERMISSION_REQUEST = 1;
+    XYTileSource tileSource;
     int search_results;
     MapView map;
+    Marker marker;
     TextView test_text;
     Button center_button, all_button, none_button, kikoto, strand;
-    Context c;
-    MyLocationNewOverlay myLocationOverlay;
-    LocationManager myLocationManager;
+    Context context;
+    MyLocationNewOverlay locationOverlay;
+    LocationManager locationManager;
     IMapController mapController;
-    GpsMyLocationProvider myLocationProvider;
-    ScaleBarOverlay myScaleBarOverlay;
-    LocationListener myLocationListener = new LocationListener() {
+    GpsMyLocationProvider locationProvider;
+    ScaleBarOverlay scaleBarOverlay;
+    LocationListener locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {}
 
@@ -75,38 +80,46 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onProviderEnabled(String s) {
-            myLocationOverlay.enableFollowLocation();
-            myLocationOverlay.enableMyLocation(myLocationProvider);
-            map.getOverlays().add(1, myLocationOverlay);
+            locationOverlay.enableFollowLocation();
+            locationOverlay.enableMyLocation(locationProvider);
+            map.getOverlays().add(locationOverlay);
+            map.getOverlays().remove(scaleBarOverlay);
+            map.getOverlays().add(scaleBarOverlay);
         }
 
         @Override
         public void onProviderDisabled(String s) {
-            myLocationOverlay.disableFollowLocation();
-            myLocationOverlay.disableMyLocation();
-            map.getOverlays().remove(myLocationOverlay);
+            locationOverlay.disableFollowLocation();
+            locationOverlay.disableMyLocation();
+            map.getOverlays().remove(locationOverlay);
         }
     };
 
     @Override
     public void onResume() {
         super.onResume();
-        myLocationOverlay.enableMyLocation(myLocationProvider);
-        map.getOverlays().add(1, myLocationOverlay);
+        locationOverlay.enableMyLocation(locationProvider);
+        map.getOverlays().add(locationOverlay);
+        map.getOverlays().remove(scaleBarOverlay);
+        map.getOverlays().add(scaleBarOverlay);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        myLocationOverlay.disableFollowLocation();
-        myLocationOverlay.disableMyLocation();
-        map.getOverlays().remove(myLocationOverlay);
+        locationOverlay.disableFollowLocation();
+        locationOverlay.disableMyLocation();
+        map.getOverlays().remove(locationOverlay);
     }
 
     @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
+        map.getOverlays().add(locationOverlay);
+        map.getOverlays().add(scaleBarOverlay);
         InfoWindow.closeAllInfoWindowsOn(map);
-        return super.dispatchTouchEvent(ev);
+        map.postInvalidate();
+        return super.dispatchTouchEvent(event);
     }
 
     public XYTileSource initializeMyMap() {
@@ -147,19 +160,18 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("MissingPermission")
     public void initializeMyGPS() {
-        myLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        myLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, myLocationListener);
-        myLocationProvider = new GpsMyLocationProvider(c);
-        myLocationOverlay = new MyLocationNewOverlay(myLocationProvider, map);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        locationProvider = new GpsMyLocationProvider(context);
+        locationOverlay = new MyLocationNewOverlay(locationProvider, map);
     }
 
-    public int addMarkers(Cursor placesCursor, Cursor subcategoriesPlacesCursor, Cursor subcategoriesCursor) {
+    public int addMarkers(final Cursor placesCursor, final Cursor subcategoriesPlacesCursor, final Cursor subcategoriesCursor) {
         int added = 0;
         String type;
         map.getOverlays().clear();
         placesCursor.moveToPosition(-1);
         while (placesCursor.moveToNext()) {
-            Marker marker = new Marker(map);
             type = "";
             subcategoriesPlacesCursor.moveToPosition(-1);
             while (subcategoriesPlacesCursor.moveToNext()) {
@@ -176,12 +188,54 @@ public class MainActivity extends AppCompatActivity {
             while (subcategoriesPlacesCursor.moveToNext()) {
                 if (placesCursor.getInt(0) == subcategoriesPlacesCursor.getInt(1) &&
                         show.contains(subcategoriesPlacesCursor.getInt(2))) {
+                    Integer id = placesCursor.getInt(0);
                     Double coordinatesX = placesCursor.getDouble(1);
                     Double coordinatesY = placesCursor.getDouble(2);
                     String name = placesCursor.getString(4 + language);
                     String description = placesCursor.getString(7 + language);
+                    marker = new Marker(map) {
+                        @Override
+                        public boolean onLongPress(MotionEvent event, MapView mapView) {
+                            boolean touched = hitTest(event, map);
+                            if (touched) {
+                                test_text.setText(this.getId() + " long");
+                                chosenId = Integer.parseInt(this.getId());
+                                mapController.animateTo(this.getPosition());
+                                return super.onLongPress(event, map);
+                            } else {
+                                return false;
+                            }
+                        }
+                    };
                     marker.setPosition(new GeoPoint(coordinatesX, coordinatesY));
                     marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                    if (chosenId == id) {
+                        marker.setIcon(ResourcesCompat.getDrawable(getResources(), R.drawable.marker_chosen, null));
+                    } else {
+                        marker.setIcon(ResourcesCompat.getDrawable(getResources(), R.drawable.marker, null));
+                    }
+                    marker.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
+                        @Override
+                        public boolean onMarkerClick(Marker marker, MapView mapView) {
+                            if (Integer.parseInt(marker.getId()) == chosenId) {
+                                chosenId = 0;
+                                marker.setIcon(ResourcesCompat.getDrawable(getResources(), R.drawable.marker, null));
+                            } else {
+                                marker.showInfoWindow();
+                                chosenId = Integer.parseInt(marker.getId());
+                                marker.setIcon(ResourcesCompat.getDrawable(getResources(), R.drawable.marker_chosen, null));
+                                mapController.animateTo(marker.getPosition());
+                            }
+                            map.getOverlays().clear();
+                            addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
+                            map.getOverlays().add(locationOverlay);
+                            map.getOverlays().add(scaleBarOverlay);
+                            map.postInvalidate();
+                            test_text.setText(marker.getId());
+                            return false;
+                        }
+                    });
+                    marker.setId(id.toString());
                     marker.setTitle(name);
                     marker.setSnippet(description);
                     marker.setSubDescription(type);
@@ -195,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setLanguage(int language) {
-        mDBHelper.setLanguage(language);
+        databaseHelper.setLanguage(language);
     }
 
     public int getLanguage(Cursor settingsCursor) {
@@ -231,16 +285,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        c = getApplicationContext();
-        Configuration.getInstance().load(c, PreferenceManager.getDefaultSharedPreferences(c));
+        context = getApplicationContext();
+        Configuration.getInstance().load(context, PreferenceManager.getDefaultSharedPreferences(context));
         //Configuration.getInstance().setUserAgentValue(getPackageName());
         Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
 
         String[] permissions = new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.ACCESS_FINE_LOCATION};
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (String p: permissions) {
-                if (ActivityCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+            for (String permission: permissions) {
+                if (ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST);
                 }
             }
@@ -250,129 +304,128 @@ public class MainActivity extends AppCompatActivity {
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 
-            mDBHelper = new DatabaseHelper(this);
+            databaseHelper = new DatabaseHelper(this);
             try {
-                mDBHelper.updateDataBase();
+                databaseHelper.updateDataBase();
             } catch (IOException mIOException) {
-                throw new Error("UnableToUpdateDatabase");
+                throw new Error("Unable to update database!");
             }
-            /*
-            try {
-                mDb = mDBHelper.getWritableDatabase();
-            } catch (SQLException mSQLException) {
-                throw mSQLException;
-            }
-            */
 
-            placesCursor = mDBHelper.getCursor("places");
-            categoriesCursor = mDBHelper.getCursor("categories");
-            subcategoriesCursor = mDBHelper.getCursor("subcategories");
-            subcategoriesPlacesCursor = mDBHelper.getCursor("subcategoriesPlaces");
-            settingsCursor = mDBHelper.getCursor("settings");
+            placesCursor = databaseHelper.getCursor("places");
+            categoriesCursor = databaseHelper.getCursor("categories");
+            subcategoriesCursor = databaseHelper.getCursor("subcategories");
+            subcategoriesPlacesCursor = databaseHelper.getCursor("subcategoriesPlaces");
+            settingsCursor = databaseHelper.getCursor("settings");
 
             language = getLanguage(settingsCursor);
 
-            myTileSource = initializeMyMap();
+            tileSource = initializeMyMap();
             setContentView(R.layout.activity_main);
-            map = (MapView) findViewById(R.id.mapview);
-            loadMyMap(myTileSource);
+            map = findViewById(R.id.mapview);
+
+            loadMyMap(tileSource);
             initializeMyGPS();
 
-            test_text = (TextView) findViewById(R.id.test_text);
+            test_text = findViewById(R.id.test_text);
 
-            center_button = (Button) findViewById(R.id.center_button);
+            center_button = findViewById(R.id.center_button);
             center_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    myLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                    if (myLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) && myLocationOverlay.getMyLocation() != null) {
-                        myLocationOverlay.enableFollowLocation();
+                    locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                    if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) && locationOverlay.getMyLocation() != null) {
+                        locationOverlay.enableFollowLocation();
                     }
+                    map.getOverlays().remove(scaleBarOverlay);
+                    map.getOverlays().add(scaleBarOverlay);
                 }
             });
-
             ////////////////////////////////////////////////////////////////////
             ////////////////////////////////////////////////////////////////////
-            all_button = (Button) findViewById(R.id.all);
+            all_button = findViewById(R.id.all);
             all_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    chosenId = 0;
                     subcategoriesCursor.moveToPosition(-1);
                     show.clear();
                     while (subcategoriesCursor.moveToNext()) {
                         show.add(subcategoriesCursor.getInt(0));
                     }
                     search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
-                    map.getOverlays().add(myLocationOverlay);
-                    map.getOverlays().add(myScaleBarOverlay);
+                    map.getOverlays().add(locationOverlay);
+                    map.getOverlays().add(scaleBarOverlay);
                     map.postInvalidate();
                     test_text.setText(Integer.toString(search_results));
                 }
             });
-            none_button = (Button) findViewById(R.id.none);
+            none_button = findViewById(R.id.none);
             none_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    chosenId = 0;
                     show.clear();
                     search_results = 0;
                     map.getOverlays().clear();
-                    map.getOverlays().add(myLocationOverlay);
-                    map.getOverlays().add(myScaleBarOverlay);
+                    map.getOverlays().add(locationOverlay);
+                    map.getOverlays().add(scaleBarOverlay);
                     map.postInvalidate();
                     test_text.setText(Integer.toString(search_results));
                 }
             });
-            kikoto = (Button) findViewById(R.id.kikoto);
+            kikoto = findViewById(R.id.kikoto);
             kikoto.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    chosenId = 0;
                     show.clear();
                     show.add(1);
                     search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
-                    map.getOverlays().add(myLocationOverlay);
-                    map.getOverlays().add(myScaleBarOverlay);
+                    map.getOverlays().add(locationOverlay);
+                    map.getOverlays().add(scaleBarOverlay);
                     map.postInvalidate();
                     test_text.setText(Integer.toString(search_results));
                 }
             });
-            strand = (Button) findViewById(R.id.strand);
+            strand = findViewById(R.id.strand);
             strand.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    chosenId = 0;
                     show.clear();
                     show.add(2);
                     search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
-                    map.getOverlays().add(myLocationOverlay);
-                    map.getOverlays().add(myScaleBarOverlay);
+                    map.getOverlays().add(locationOverlay);
+                    map.getOverlays().add(scaleBarOverlay);
                     map.postInvalidate();
                     test_text.setText(Integer.toString(search_results));
                 }
             });
-            Button hun = (Button) findViewById(R.id.hun);
+            Button hun = findViewById(R.id.hun);
             hun.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     setLanguage(0);
-                    settingsCursor = mDBHelper.getCursor("settings");
+                    settingsCursor = databaseHelper.getCursor("settings");
                     language = getLanguage(settingsCursor);
                     search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
-                    map.getOverlays().add(myLocationOverlay);
-                    map.getOverlays().add(myScaleBarOverlay);
+                    map.getOverlays().add(locationOverlay);
+                    map.getOverlays().add(scaleBarOverlay);
                     map.postInvalidate();
                     renameUI();
                     test_text.setText(Integer.toString(language));
                 }
             });
-            Button eng = (Button) findViewById(R.id.eng);
+            Button eng = findViewById(R.id.eng);
             eng.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     setLanguage(1);
-                    settingsCursor = mDBHelper.getCursor("settings");
+                    settingsCursor = databaseHelper.getCursor("settings");
                     language = getLanguage(settingsCursor);
                     search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
-                    map.getOverlays().add(myLocationOverlay);
-                    map.getOverlays().add(myScaleBarOverlay);
+                    map.getOverlays().add(locationOverlay);
+                    map.getOverlays().add(scaleBarOverlay);
                     map.postInvalidate();
                     renameUI();
                     test_text.setText(Integer.toString(language));
@@ -381,24 +434,24 @@ public class MainActivity extends AppCompatActivity {
             ////////////////////////////////////////////////////////////////////
             ////////////////////////////////////////////////////////////////////
 
-            myScaleBarOverlay = new ScaleBarOverlay(map);
-            myScaleBarOverlay.setAlignBottom(true);
-            myScaleBarOverlay.setAlignRight(true);
-            myScaleBarOverlay.setMaxLength(2);
-            myScaleBarOverlay.setScaleBarOffset(50,50);
-            myScaleBarOverlay.setTextSize(60);
-            myScaleBarOverlay.setLineWidth(7);
+            scaleBarOverlay = new ScaleBarOverlay(map);
+            scaleBarOverlay.setAlignBottom(true);
+            scaleBarOverlay.setAlignRight(true);
+            scaleBarOverlay.setMaxLength(2);
+            scaleBarOverlay.setScaleBarOffset(50,50);
+            scaleBarOverlay.setTextSize(60);
+            scaleBarOverlay.setLineWidth(7);
 
             map.addMapListener(new MapListener() {
                 @Override
                 public boolean onScroll(ScrollEvent event) {
-                    myLocationOverlay.disableFollowLocation();
+                    locationOverlay.disableFollowLocation();
                     return true;
                 }
 
                 @Override
                 public boolean onZoom(ZoomEvent event) {
-                    myLocationOverlay.disableFollowLocation();
+                    locationOverlay.disableFollowLocation();
                     return false;
                 }
             });
@@ -423,18 +476,9 @@ public class MainActivity extends AppCompatActivity {
             search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
 
             test_text.setText(Integer.toString(search_results));
-            //test_text.setText(Integer.toString(getLanguage(settingsCursor)));
 
-            /*
-            File f = new File(c.getApplicationInfo().dataDir + "/databases/");
-            File[] paths = f.listFiles();
-            for (File path : paths) {
-                System.out.println(path);
-            }
-            */
-
-            map.getOverlays().add(myLocationOverlay);
-            map.getOverlays().add(myScaleBarOverlay);
+            map.getOverlays().add(locationOverlay);
+            map.getOverlays().add(scaleBarOverlay);
 
             /*
             RotationGestureOverlay rotationGestureOverlay = new RotationGestureOverlay(map);
