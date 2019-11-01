@@ -1,23 +1,25 @@
 package com.example.osm;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.fragment.app.DialogFragment;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -49,6 +51,7 @@ import static org.osmdroid.tileprovider.util.StreamUtils.copy;
 
 public class MainActivity extends AppCompatActivity {
 
+    Bundle mySavedInstanceState;
     DatabaseHelper databaseHelper;
     Cursor placesCursor;
     Cursor categoriesCursor;
@@ -57,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     Cursor settingsCursor;
     int language; // 0-HUN, 1-ENG, 2-SRB
     int chosenId = 0;
-    ArrayList<Integer> show = new ArrayList<>();
+    ArrayList<Integer> showPlaces = new ArrayList<>();
     static final int PERMISSION_REQUEST = 1;
     XYTileSource tileSource;
     int search_results;
@@ -168,31 +171,36 @@ public class MainActivity extends AppCompatActivity {
 
     public int addMarkers(final Cursor placesCursor, final Cursor subcategoriesPlacesCursor, final Cursor subcategoriesCursor) {
         int added = 0;
-        String type;
+        //String type;
         map.getOverlays().clear();
         placesCursor.moveToPosition(-1);
         while (placesCursor.moveToNext()) {
-            type = "";
+            StringBuilder stringBuilder = new StringBuilder();
+            //type = "";
             subcategoriesPlacesCursor.moveToPosition(-1);
             while (subcategoriesPlacesCursor.moveToNext()) {
                 subcategoriesCursor.moveToPosition(-1);
                 while (subcategoriesCursor.moveToNext()) {
                     if (placesCursor.getInt(0) == subcategoriesPlacesCursor.getInt(1) &&
                             subcategoriesPlacesCursor.getInt(2) == subcategoriesCursor.getInt(0)) {
-                        type += subcategoriesCursor.getString(1 + language) + ", ";
+                        stringBuilder.append(subcategoriesCursor.getString(1 + language) + ", ");
+                        //type += subcategoriesCursor.getString(1 + language) + ", ";
                     }
                 }
             }
-            if (!type.equals("")) type = type.substring(0, type.length() - 2);
+            if (!stringBuilder.toString().equals("")) {
+                stringBuilder.setLength(stringBuilder.length() - 2);
+            }
+            final String type = stringBuilder.toString();
             subcategoriesPlacesCursor.moveToPosition(-1);
             while (subcategoriesPlacesCursor.moveToNext()) {
                 if (placesCursor.getInt(0) == subcategoriesPlacesCursor.getInt(1) &&
-                        show.contains(subcategoriesPlacesCursor.getInt(2))) {
+                        showPlaces.contains(subcategoriesPlacesCursor.getInt(2))) {
                     Integer id = placesCursor.getInt(0);
                     Double coordinatesX = placesCursor.getDouble(1);
                     Double coordinatesY = placesCursor.getDouble(2);
-                    String name = placesCursor.getString(4 + language);
-                    String description = placesCursor.getString(7 + language);
+                    final String name = placesCursor.getString(4 + language);
+                    final String description = placesCursor.getString(7 + language);
                     marker = new Marker(map) {
                         @Override
                         public boolean onLongPress(MotionEvent event, MapView mapView) {
@@ -201,6 +209,33 @@ public class MainActivity extends AppCompatActivity {
                                 test_text.setText(this.getId() + " long");
                                 chosenId = Integer.parseInt(this.getId());
                                 mapController.animateTo(this.getPosition());
+                                class MyInfoWindow extends DialogFragment {
+                                    @Override
+                                    public Dialog onCreateDialog(Bundle savedInstanceState) {
+                                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                                        View view = View.inflate(context, R.layout.infowindow, null);
+                                        builder.setView(view);
+                                        builder.setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int id) {
+                                                // User cancelled the dialog
+                                            }
+                                        });
+                                        TextView descriptionText = view.findViewById(R.id.description);
+                                        descriptionText.setText(description);
+                                        TextView titleText = view.findViewById(R.id.title);
+                                        titleText.setText(name);
+
+                                        //String infowindowType = "";
+
+
+                                        TextView typeText = view.findViewById(R.id.type);
+                                        typeText.setText(type);
+                                        builder.show();
+                                        return builder.create();
+                                    }
+                                }
+                                MyInfoWindow infoWindow = new MyInfoWindow();
+                                infoWindow.onCreateDialog(mySavedInstanceState);
                                 return super.onLongPress(event, map);
                             } else {
                                 return false;
@@ -237,8 +272,19 @@ public class MainActivity extends AppCompatActivity {
                     });
                     marker.setId(id.toString());
                     marker.setTitle(name);
-                    marker.setSnippet(description);
-                    marker.setSubDescription(type);
+                    marker.setSnippet(type);
+                    //marker.setSubDescription(type);
+                    switch (language) {
+                        case 0:
+                            marker.setSubDescription("További információkért nyomjon hosszan a megfelelő pin-re!");
+                            break;
+                        case 1:
+                            marker.setSubDescription("For more information, please long press the desired pin!");
+                            break;
+                        case 2:
+                            marker.setSubDescription("[szerb]");
+                            break;
+                    }
                     added++;
                     map.getOverlays().add(marker);
                     break;
@@ -282,13 +328,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         context = getApplicationContext();
         Configuration.getInstance().load(context, PreferenceManager.getDefaultSharedPreferences(context));
         //Configuration.getInstance().setUserAgentValue(getPackageName());
         Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
+        mySavedInstanceState = savedInstanceState;
 
         String[] permissions = new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.ACCESS_FINE_LOCATION};
@@ -348,9 +395,9 @@ public class MainActivity extends AppCompatActivity {
                 public void onClick(View view) {
                     chosenId = 0;
                     subcategoriesCursor.moveToPosition(-1);
-                    show.clear();
+                    showPlaces.clear();
                     while (subcategoriesCursor.moveToNext()) {
-                        show.add(subcategoriesCursor.getInt(0));
+                        showPlaces.add(subcategoriesCursor.getInt(0));
                     }
                     search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
                     map.getOverlays().add(locationOverlay);
@@ -364,7 +411,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     chosenId = 0;
-                    show.clear();
+                    showPlaces.clear();
                     search_results = 0;
                     map.getOverlays().clear();
                     map.getOverlays().add(locationOverlay);
@@ -378,8 +425,8 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     chosenId = 0;
-                    show.clear();
-                    show.add(1);
+                    showPlaces.clear();
+                    showPlaces.add(1);
                     search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
                     map.getOverlays().add(locationOverlay);
                     map.getOverlays().add(scaleBarOverlay);
@@ -392,8 +439,8 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     chosenId = 0;
-                    show.clear();
-                    show.add(2);
+                    showPlaces.clear();
+                    showPlaces.add(2);
                     search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
                     map.getOverlays().add(locationOverlay);
                     map.getOverlays().add(scaleBarOverlay);
@@ -469,9 +516,9 @@ public class MainActivity extends AppCompatActivity {
             renameUI();
 
             subcategoriesCursor.moveToPosition(-1);
-            show.clear();
+            showPlaces.clear();
             while (subcategoriesCursor.moveToNext()) {
-                show.add(subcategoriesCursor.getInt(0));
+                showPlaces.add(subcategoriesCursor.getInt(0));
             }
             search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
 
