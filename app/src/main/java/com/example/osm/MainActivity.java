@@ -19,7 +19,6 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -171,12 +170,10 @@ public class MainActivity extends AppCompatActivity {
 
     public int addMarkers(final Cursor placesCursor, final Cursor subcategoriesPlacesCursor, final Cursor subcategoriesCursor) {
         int added = 0;
-        //String type;
         map.getOverlays().clear();
         placesCursor.moveToPosition(-1);
         while (placesCursor.moveToNext()) {
             StringBuilder stringBuilder = new StringBuilder();
-            //type = "";
             subcategoriesPlacesCursor.moveToPosition(-1);
             while (subcategoriesPlacesCursor.moveToNext()) {
                 subcategoriesCursor.moveToPosition(-1);
@@ -184,7 +181,6 @@ public class MainActivity extends AppCompatActivity {
                     if (placesCursor.getInt(0) == subcategoriesPlacesCursor.getInt(1) &&
                             subcategoriesPlacesCursor.getInt(2) == subcategoriesCursor.getInt(0)) {
                         stringBuilder.append(subcategoriesCursor.getString(1 + language) + ", ");
-                        //type += subcategoriesCursor.getString(1 + language) + ", ";
                     }
                 }
             }
@@ -215,19 +211,14 @@ public class MainActivity extends AppCompatActivity {
                                         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                                         View view = View.inflate(context, R.layout.infowindow, null);
                                         builder.setView(view);
-                                        builder.setNegativeButton("Close", new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dialog, int id) {
-                                                // User cancelled the dialog
-                                            }
+                                        builder.setNegativeButton((language == 0) ? "Bezárás" : (language == 1) ? "Close" : "[szerb]",
+                                                new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int id) {}
                                         });
                                         TextView descriptionText = view.findViewById(R.id.description);
                                         descriptionText.setText(description);
                                         TextView titleText = view.findViewById(R.id.title);
                                         titleText.setText(name);
-
-                                        //String infowindowType = "";
-
-
                                         TextView typeText = view.findViewById(R.id.type);
                                         typeText.setText(type);
                                         builder.show();
@@ -273,7 +264,6 @@ public class MainActivity extends AppCompatActivity {
                     marker.setId(id.toString());
                     marker.setTitle(name);
                     marker.setSnippet(type);
-                    //marker.setSubDescription(type);
                     switch (language) {
                         case 0:
                             marker.setSubDescription("További információkért nyomjon hosszan a megfelelő pin-re!");
@@ -333,7 +323,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         context = getApplicationContext();
         Configuration.getInstance().load(context, PreferenceManager.getDefaultSharedPreferences(context));
-        //Configuration.getInstance().setUserAgentValue(getPackageName());
         Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
         mySavedInstanceState = savedInstanceState;
 
@@ -375,6 +364,8 @@ public class MainActivity extends AppCompatActivity {
 
             test_text = findViewById(R.id.test_text);
 
+            ////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////////////////////////////////
             center_button = findViewById(R.id.center_button);
             center_button.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -387,8 +378,6 @@ public class MainActivity extends AppCompatActivity {
                     map.getOverlays().add(scaleBarOverlay);
                 }
             });
-            ////////////////////////////////////////////////////////////////////
-            ////////////////////////////////////////////////////////////////////
             all_button = findViewById(R.id.all);
             all_button.setOnClickListener(new View.OnClickListener() {
                 @Override
