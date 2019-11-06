@@ -11,6 +11,7 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Location;
@@ -19,9 +20,12 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.SparseBooleanArray;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import org.osmdroid.api.IMapController;
@@ -44,29 +48,29 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.osmdroid.tileprovider.util.StreamUtils.copy;
 
 
 public class MainActivity extends AppCompatActivity {
 
+    static final int PERMISSION_REQUEST = 1;
+    public static final String SHARED_PREFERENCES = "sharedPreferences";
+    public static final String LANGUAGE = "language";
+    int language; // 0-HUN, 1-ENG, 2-SRB
     Bundle mySavedInstanceState;
     DatabaseHelper databaseHelper;
-    Cursor placesCursor;
-    Cursor categoriesCursor;
-    Cursor subcategoriesCursor;
-    Cursor subcategoriesPlacesCursor;
-    Cursor settingsCursor;
-    int language; // 0-HUN, 1-ENG, 2-SRB
+    Cursor placesCursor, categoriesCursor, subcategoriesCursor, subcategoriesPlacesCursor;
     int chosenId = 0;
     ArrayList<Integer> showPlaces = new ArrayList<>();
-    static final int PERMISSION_REQUEST = 1;
     XYTileSource tileSource;
     int search_results;
     MapView map;
     Marker marker;
     TextView test_text;
-    Button center_button, all_button, none_button, kikoto, strand;
+    Button center_button, all_button, none_button, search_button;
     Context context;
     MyLocationNewOverlay locationOverlay;
     LocationManager locationManager;
@@ -225,8 +229,8 @@ public class MainActivity extends AppCompatActivity {
                                         return builder.create();
                                     }
                                 }
-                                MyInfoWindow infoWindow = new MyInfoWindow();
-                                infoWindow.onCreateDialog(mySavedInstanceState);
+                                MyInfoWindow myInfoWindow = new MyInfoWindow();
+                                myInfoWindow.onCreateDialog(mySavedInstanceState);
                                 return super.onLongPress(event, map);
                             } else {
                                 return false;
@@ -285,12 +289,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setLanguage(int language) {
-        databaseHelper.setLanguage(language);
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(LANGUAGE, language);
+        editor.apply();
     }
 
-    public int getLanguage(Cursor settingsCursor) {
-        settingsCursor.moveToPosition(0);
-        return settingsCursor.getInt(1);
+    public int getLanguage() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
+        return sharedPreferences.getInt(LANGUAGE, 1);
     }
 
     public void renameUI() {
@@ -299,22 +306,21 @@ public class MainActivity extends AppCompatActivity {
                 center_button.setText("Középre");
                 all_button.setText("Minden");
                 none_button.setText("Semmi");
+                search_button.setText("Keresés");
                 break;
             case 1:
                 center_button.setText("Center");
                 all_button.setText("All");
                 none_button.setText("None");
+                search_button.setText("Search");
                 break;
             case 2:
                 center_button.setText("[szerb]");
                 all_button.setText("[szerb]");
                 none_button.setText("[szerb]");
+                search_button.setText("[szerb]");
                 break;
         }
-        subcategoriesCursor.moveToPosition(0);
-        kikoto.setText(subcategoriesCursor.getString(1 + language));
-        subcategoriesCursor.moveToNext();
-        strand.setText(subcategoriesCursor.getString(1 + language));
     }
 
     @Override
@@ -351,9 +357,8 @@ public class MainActivity extends AppCompatActivity {
             categoriesCursor = databaseHelper.getCursor("categories");
             subcategoriesCursor = databaseHelper.getCursor("subcategories");
             subcategoriesPlacesCursor = databaseHelper.getCursor("subcategoriesPlaces");
-            settingsCursor = databaseHelper.getCursor("settings");
 
-            language = getLanguage(settingsCursor);
+            language = getLanguage();
 
             tileSource = initializeMyMap();
             setContentView(R.layout.activity_main);
@@ -409,32 +414,68 @@ public class MainActivity extends AppCompatActivity {
                     test_text.setText(Integer.toString(search_results));
                 }
             });
-            kikoto = findViewById(R.id.kikoto);
-            kikoto.setOnClickListener(new View.OnClickListener() {
+            search_button = findViewById(R.id.search_button);
+            search_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    chosenId = 0;
-                    showPlaces.clear();
-                    showPlaces.add(1);
-                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
-                    map.getOverlays().add(locationOverlay);
-                    map.getOverlays().add(scaleBarOverlay);
-                    map.postInvalidate();
-                    test_text.setText(Integer.toString(search_results));
-                }
-            });
-            strand = findViewById(R.id.strand);
-            strand.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    chosenId = 0;
-                    showPlaces.clear();
-                    showPlaces.add(2);
-                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
-                    map.getOverlays().add(locationOverlay);
-                    map.getOverlays().add(scaleBarOverlay);
-                    map.postInvalidate();
-                    test_text.setText(Integer.toString(search_results));
+                    class MySearchDialog extends DialogFragment {
+                        @Override
+                        public Dialog onCreateDialog(Bundle savedInstanceState) {
+                            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                            View view = View.inflate(context, R.layout.search, null);
+                            builder.setView(view);
+                            builder.setTitle((language == 0) ? "Keresés" : (language == 1) ? "Search" : "[szerb]");
+                            TextView searchText = view.findViewById(R.id.search_text);
+                            searchText.setText((language == 0) ? "Kérem válassza ki a megjeleníteni kívánt kategóriákat:" :
+                                (language == 1) ? "Please choose the categories you want to be displayed:" :
+                                "[szerb]");
+                            subcategoriesCursor.moveToPosition(-1);
+                            int counter = 0;
+                            while (subcategoriesCursor.moveToNext()) {
+                                counter++;
+                            }
+                            final int subcategoryCounter = counter;
+                            final String[] allSubcategories = new String[subcategoryCounter];
+                            subcategoriesCursor.moveToPosition(-1);
+                            for (int i = 0; i < subcategoryCounter; i++) {
+                                subcategoriesCursor.moveToNext();
+                                allSubcategories[i] = subcategoriesCursor.getString(1 + language);
+                            }
+                            final ListView listView = view.findViewById(R.id.list);
+                            final List<String> list = new ArrayList<>(Arrays.asList(allSubcategories));
+                            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(context,
+                                    android.R.layout.simple_list_item_multiple_choice, list);
+                            listView.setAdapter(arrayAdapter);
+                            listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+                            builder.setNegativeButton((language == 0) ? "Bezárás" : (language == 1) ? "Close" : "[szerb]",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {}
+                                    });
+                            builder.setPositiveButton((language == 0) ? "Keresés" : (language == 1) ? "Search" : "[szerb]",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            showPlaces.clear();
+                                            SparseBooleanArray sparseBooleanArray = listView.getCheckedItemPositions();
+                                            for (int i = 0; i < subcategoryCounter; i++) {
+                                                if (sparseBooleanArray.get(i)) {
+                                                    showPlaces.add(i + 1);
+                                                }
+                                            }
+                                            chosenId = 0;
+                                            search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
+                                            map.getOverlays().add(locationOverlay);
+                                            map.getOverlays().add(scaleBarOverlay);
+                                            map.postInvalidate();
+                                            test_text.setText(Integer.toString(search_results));
+                                        }
+                                    });
+                            builder.setCancelable(false);
+                            builder.show();
+                            return builder.create();
+                        }
+                    }
+                    MySearchDialog mySearchDialog = new MySearchDialog();
+                    mySearchDialog.onCreateDialog(mySavedInstanceState);
                 }
             });
             Button hun = findViewById(R.id.hun);
@@ -442,8 +483,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     setLanguage(0);
-                    settingsCursor = databaseHelper.getCursor("settings");
-                    language = getLanguage(settingsCursor);
+                    language = getLanguage();
                     search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
                     map.getOverlays().add(locationOverlay);
                     map.getOverlays().add(scaleBarOverlay);
@@ -457,8 +497,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     setLanguage(1);
-                    settingsCursor = databaseHelper.getCursor("settings");
-                    language = getLanguage(settingsCursor);
+                    language = getLanguage();
                     search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
                     map.getOverlays().add(locationOverlay);
                     map.getOverlays().add(scaleBarOverlay);
