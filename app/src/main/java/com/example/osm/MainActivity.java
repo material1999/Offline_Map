@@ -1,5 +1,6 @@
 package com.example.osm;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -21,12 +22,20 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.SparseBooleanArray;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
@@ -49,6 +58,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.osmdroid.tileprovider.util.StreamUtils.copy;
@@ -422,7 +432,7 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public Dialog onCreateDialog(Bundle savedInstanceState) {
                             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                            View view = View.inflate(context, R.layout.search, null);
+                            final View view = View.inflate(context, R.layout.search, null);
                             builder.setView(view);
                             builder.setTitle((language == 0) ? "Keresés" : (language == 1) ? "Search" : "[szerb]");
                             TextView searchText = view.findViewById(R.id.search_text);
@@ -442,11 +452,97 @@ public class MainActivity extends AppCompatActivity {
                                 allSubcategories[i] = subcategoriesCursor.getString(1 + language);
                             }
                             final ListView listView = view.findViewById(R.id.list);
+
+
+
+
+
+
+
+                            /*
                             final List<String> list = new ArrayList<>(Arrays.asList(allSubcategories));
                             final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(context,
                                     android.R.layout.simple_list_item_multiple_choice, list);
+                            TextView t = view.findViewById(R.id.search_text);
+                            t.setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.marker, 0, 0, 0);
+                            TextView[] tt = new TextView[subcategoryCounter];
+                            for (int i = 0; i < subcategoryCounter; i++) {
+                                tt[i] = t;
+                            }
+                            final ArrayAdapter<String> testAdapter = new ArrayAdapter<>(context,
+                                    android.R.layout.simple_list_item_multiple_choice, android.R.id.text1, allSubcategories);
+                            listView.setAdapter(testAdapter);
+                            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                @Override
+                                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                                    System.out.println("click");
+                                }
+                            });
+                            */
+
+
+
+
+
+
+
+
+                            final Boolean[] clicked = new Boolean[1];
+                            clicked[0] = false;
+                            List<HashMap<String, String>> aList = new ArrayList<HashMap<String, String>>();
+                            for (int i = 0; i < subcategoryCounter; i++) {
+                                HashMap<String, String> hm = new HashMap<String, String>();
+                                hm.put("listview_image", Integer.toString(R.drawable.direction_arrow));
+                                hm.put("listview_checkBox", allSubcategories[i]);
+                                aList.add(hm);
+                            }
+                            String[] from = {"listview_image", "listview_checkBox"};
+                            int[] to = {R.id.imageView2, R.id.checkBox};
+                            final Boolean[] booleans = new Boolean[subcategoryCounter];
+                            for (int i = 0; i < subcategoryCounter; i++) {
+                                booleans[i] = false;
+                            }
+                            class CustomAdapter extends SimpleAdapter {
+                                LayoutInflater inflater;
+                                Context context;
+                                List<HashMap<String, String>> arrayList;
+                                public CustomAdapter(Context context, List<HashMap<String, String>> data, int resource, String[] from, int[] to) {
+                                    super(context, data, resource, from, to);
+                                    this.context = context;
+                                    this.arrayList = data;
+                                    //inflater.from(context);
+                                }
+                                @Override
+                                public View getView(final int position, View convertView, ViewGroup parent) {
+                                    View view = super.getView(position, convertView, parent);
+                                    final CheckBox checkBox = view.findViewById(R.id.checkBox);
+                                    final ImageView imageView = view.findViewById(R.id.imageView2);
+                                    imageView.setImageResource(R.drawable.marker);
+                                    checkBox.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            //Toast.makeText(context, arrayList.get(position).get("listview_checkBox"), Toast.LENGTH_SHORT).show();
+                                            //System.out.println(arrayList.get(position));
+                                            booleans[position] = !booleans[position];
+                                            //System.out.println(Arrays.toString(booleans));
+                                            //System.out.println(position);
+                                        }
+                                    });
+                                    return view;
+                                }
+                            }
+                            final CustomAdapter arrayAdapter = new CustomAdapter(context, aList,
+                                    R.layout.list_item, from, to);
                             listView.setAdapter(arrayAdapter);
-                            listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+
+
+
+
+
+
+
+                            listView.setDivider(null);
+                            //listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
                             builder.setNegativeButton((language == 0) ? "Bezárás" : (language == 1) ? "Close" : "[szerb]",
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {}
@@ -455,9 +551,15 @@ public class MainActivity extends AppCompatActivity {
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
                                             showPlaces.clear();
-                                            SparseBooleanArray sparseBooleanArray = listView.getCheckedItemPositions();
+                                            //SparseBooleanArray sparseBooleanArray = listView.getCheckedItemPositions();
+                                            //System.out.println(sparseBooleanArray);
                                             for (int i = 0; i < subcategoryCounter; i++) {
+                                                /*
                                                 if (sparseBooleanArray.get(i)) {
+                                                    showPlaces.add(i + 1);
+                                                }
+                                                */
+                                                if (booleans[i]) {
                                                     showPlaces.add(i + 1);
                                                 }
                                             }
@@ -467,6 +569,7 @@ public class MainActivity extends AppCompatActivity {
                                             map.getOverlays().add(scaleBarOverlay);
                                             map.postInvalidate();
                                             test_text.setText(Integer.toString(search_results));
+                                            System.out.println(showPlaces);
                                         }
                                     });
                             builder.setCancelable(false);

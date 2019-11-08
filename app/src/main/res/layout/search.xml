@@ -1,38 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:fontFamily="sans-serif"
         android:text="Search"
-        android:textSize="20dp"
-        android:layout_margin="20dp"
+        android:textSize="16dp"
+        android:layout_margin="16dp"
         android:id="@+id/search_text">
     </TextView>
 
     <ListView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/list">
-    </ListView>
-
-    <CheckedTextView xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/row"
+        android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:textColor="#000000"
-        android:fontFamily="sans-serif-condensed"
-        style="?android:textAppearanceSmall"
-        android:background="?android:attr/activatedBackgroundIndicator"
-        android:minHeight="?android:attr/listPreferredItemHeightSmall"
-        android:checkMark="?android:attr/listChoiceIndicatorMultiple"
-        android:clickable="true"/>
+        android:layout_height="match_parent"
+        tools:listitem="@layout/list_item" />
 
 </LinearLayout>
