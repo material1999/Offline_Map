@@ -17,52 +17,41 @@
 
     <Button
         android:id="@+id/center_button"
-        android:layout_width="90dp"
-        android:layout_height="45dp"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
         android:text="Center"
         app:layout_constraintTop_toTopOf="@id/mapview" />
 
     <Button
         android:id="@+id/all"
-        android:layout_width="90dp"
-        android:layout_height="45dp"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
         android:text="All"
         app:layout_constraintTop_toBottomOf="@+id/center_button" />
 
     <Button
         android:id="@+id/none"
-        android:layout_width="90dp"
-        android:layout_height="45dp"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
         android:text="None"
         app:layout_constraintTop_toBottomOf="@+id/all" />
 
     <Button
         android:id="@+id/search_button"
-        android:layout_width="90dp"
-        android:layout_height="45dp"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
         android:text="Keresés"
         app:layout_constraintTop_toBottomOf="@+id/none" />
 
     <Button
-        android:id="@+id/hun"
-        android:layout_width="90dp"
+        android:id="@+id/change_language"
+        android:layout_width="150dp"
         android:layout_height="45dp"
-        android:text="Magyar"
+        android:text="Language"
         app:layout_constraintBottom_toBottomOf="@+id/search_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/mapview"
-        app:layout_constraintVertical_bias="0.17" />
-
-    <Button
-        android:id="@+id/eng"
-        android:layout_width="90dp"
-        android:layout_height="45dp"
-        android:text="English"
-        app:layout_constraintBottom_toBottomOf="@+id/search_button"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/hun"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.095" />
 
     <TextView
         android:id="@+id/test_text"

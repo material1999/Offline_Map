@@ -1,6 +1,5 @@
 package com.example.osm;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -30,12 +29,10 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
@@ -80,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
     MapView map;
     Marker marker;
     TextView test_text;
-    Button center_button, all_button, none_button, search_button;
+    Button center_button, all_button, none_button, search_button, change_language_button;
     Context context;
     MyLocationNewOverlay locationOverlay;
     LocationManager locationManager;
@@ -206,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
             while (subcategoriesPlacesCursor.moveToNext()) {
                 if (placesCursor.getInt(0) == subcategoriesPlacesCursor.getInt(1) &&
                         showPlaces.contains(subcategoriesPlacesCursor.getInt(2))) {
-                    Integer id = placesCursor.getInt(0);
+                    final Integer id = placesCursor.getInt(0);
                     Double coordinatesX = placesCursor.getDouble(1);
                     Double coordinatesY = placesCursor.getDouble(2);
                     final String name = placesCursor.getString(4 + language);
@@ -235,6 +232,33 @@ public class MainActivity extends AppCompatActivity {
                                         titleText.setText(name);
                                         TextView typeText = view.findViewById(R.id.type);
                                         typeText.setText(type);
+
+
+
+
+
+
+
+                                        ////////////////////////////////////////
+                                        ////////////////////////////////////////
+                                        if (id <= 4) {
+                                            ImageView imageView = view.findViewById(R.id.place_picture);
+                                            String uri = "@drawable/p" + id.toString();
+                                            System.out.println(uri);
+                                            int imageResource = view.getResources().getIdentifier(uri, null, getPackageName());
+                                            imageView.setImageDrawable(view.getResources().getDrawable(imageResource));
+                                        }
+                                        ////////////////////////////////////////
+                                        ////////////////////////////////////////
+
+
+
+
+
+
+
+
+
                                         builder.show();
                                         return builder.create();
                                     }
@@ -317,18 +341,21 @@ public class MainActivity extends AppCompatActivity {
                 all_button.setText("Minden");
                 none_button.setText("Semmi");
                 search_button.setText("Keresés");
+                change_language_button.setText("Nyelv");
                 break;
             case 1:
                 center_button.setText("Center");
                 all_button.setText("All");
                 none_button.setText("None");
                 search_button.setText("Search");
+                change_language_button.setText("Language");
                 break;
             case 2:
                 center_button.setText("[szerb]");
                 all_button.setText("[szerb]");
                 none_button.setText("[szerb]");
                 search_button.setText("[szerb]");
+                change_language_button.setText("[szerb]");
                 break;
         }
     }
@@ -378,9 +405,7 @@ public class MainActivity extends AppCompatActivity {
             initializeMyGPS();
 
             test_text = findViewById(R.id.test_text);
-
-            ////////////////////////////////////////////////////////////////////
-            ////////////////////////////////////////////////////////////////////
+            
             center_button = findViewById(R.id.center_button);
             center_button.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -431,7 +456,7 @@ public class MainActivity extends AppCompatActivity {
                     class MySearchDialog extends DialogFragment {
                         @Override
                         public Dialog onCreateDialog(Bundle savedInstanceState) {
-                            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.Theme_AppCompat_Light_Dialog_Alert);
                             final View view = View.inflate(context, R.layout.search, null);
                             builder.setView(view);
                             builder.setTitle((language == 0) ? "Keresés" : (language == 1) ? "Search" : "[szerb]");
@@ -452,33 +477,29 @@ public class MainActivity extends AppCompatActivity {
                                 allSubcategories[i] = subcategoriesCursor.getString(1 + language);
                             }
                             final ListView listView = view.findViewById(R.id.list);
-
-
-
-
-
-
-
-                            /*
-                            final List<String> list = new ArrayList<>(Arrays.asList(allSubcategories));
-                            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(context,
-                                    android.R.layout.simple_list_item_multiple_choice, list);
-                            TextView t = view.findViewById(R.id.search_text);
-                            t.setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.marker, 0, 0, 0);
-                            TextView[] tt = new TextView[subcategoryCounter];
+                            final Boolean[] booleans = new Boolean[subcategoryCounter];
                             for (int i = 0; i < subcategoryCounter; i++) {
-                                tt[i] = t;
+                                booleans[i] = false;
                             }
-                            final ArrayAdapter<String> testAdapter = new ArrayAdapter<>(context,
+
+
+
+
+
+
+
+                            final List<String> list = new ArrayList<>(Arrays.asList(allSubcategories));
+                            ArrayAdapter<String> test = new ArrayAdapter<>(context,
                                     android.R.layout.simple_list_item_multiple_choice, android.R.id.text1, allSubcategories);
-                            listView.setAdapter(testAdapter);
+                            listView.setAdapter(test);
                             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                                 @Override
                                 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                                    System.out.println("click");
+                                    booleans[(int) l] = !booleans[(int) l];
+                                    System.out.println(Arrays.toString(booleans));
                                 }
                             });
-                            */
+
 
 
 
@@ -498,10 +519,6 @@ public class MainActivity extends AppCompatActivity {
                             }
                             String[] from = {"listview_image", "listview_checkBox"};
                             int[] to = {R.id.imageView2, R.id.checkBox};
-                            final Boolean[] booleans = new Boolean[subcategoryCounter];
-                            for (int i = 0; i < subcategoryCounter; i++) {
-                                booleans[i] = false;
-                            }
                             class CustomAdapter extends SimpleAdapter {
                                 LayoutInflater inflater;
                                 Context context;
@@ -518,12 +535,20 @@ public class MainActivity extends AppCompatActivity {
                                     final CheckBox checkBox = view.findViewById(R.id.checkBox);
                                     final ImageView imageView = view.findViewById(R.id.imageView2);
                                     imageView.setImageResource(R.drawable.marker);
+                                    //checkBox.setCompoundDrawablesRelativeWithIntrinsicBounds(android.R.drawable.ic_menu_save, 0, 0, 0);
                                     checkBox.setOnClickListener(new View.OnClickListener() {
                                         @Override
                                         public void onClick(View view) {
                                             //Toast.makeText(context, arrayList.get(position).get("listview_checkBox"), Toast.LENGTH_SHORT).show();
                                             //System.out.println(arrayList.get(position));
                                             booleans[position] = !booleans[position];
+                                            for (int i = 0; i < subcategoryCounter; i++) {
+                                                if (booleans[i]) {
+                                                    listView.setItemChecked(i, true);
+                                                } else {
+                                                    listView.setItemChecked(i, false);
+                                                }
+                                            }
                                             //System.out.println(Arrays.toString(booleans));
                                             //System.out.println(position);
                                         }
@@ -533,7 +558,8 @@ public class MainActivity extends AppCompatActivity {
                             }
                             final CustomAdapter arrayAdapter = new CustomAdapter(context, aList,
                                     R.layout.list_item, from, to);
-                            listView.setAdapter(arrayAdapter);
+
+                            //listView.setAdapter(arrayAdapter);
 
 
 
@@ -542,7 +568,7 @@ public class MainActivity extends AppCompatActivity {
 
 
                             listView.setDivider(null);
-                            //listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+                            listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
                             builder.setNegativeButton((language == 0) ? "Bezárás" : (language == 1) ? "Close" : "[szerb]",
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {}
@@ -551,14 +577,7 @@ public class MainActivity extends AppCompatActivity {
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
                                             showPlaces.clear();
-                                            //SparseBooleanArray sparseBooleanArray = listView.getCheckedItemPositions();
-                                            //System.out.println(sparseBooleanArray);
                                             for (int i = 0; i < subcategoryCounter; i++) {
-                                                /*
-                                                if (sparseBooleanArray.get(i)) {
-                                                    showPlaces.add(i + 1);
-                                                }
-                                                */
                                                 if (booleans[i]) {
                                                     showPlaces.add(i + 1);
                                                 }
@@ -581,36 +600,35 @@ public class MainActivity extends AppCompatActivity {
                     mySearchDialog.onCreateDialog(mySavedInstanceState);
                 }
             });
-            Button hun = findViewById(R.id.hun);
-            hun.setOnClickListener(new View.OnClickListener() {
+            change_language_button = findViewById(R.id.change_language);
+            change_language_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    setLanguage(0);
-                    language = getLanguage();
-                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
-                    map.getOverlays().add(locationOverlay);
-                    map.getOverlays().add(scaleBarOverlay);
-                    map.postInvalidate();
-                    renameUI();
-                    test_text.setText(Integer.toString(language));
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.Theme_AppCompat_Light_Dialog_Alert);
+                    builder.setTitle((language == 0) ? "Válasszon nyelvet:" : (language == 1) ? "Choose language:" : "[szerb]");
+                    String[] items = {"Magyar", "English", "[szerb]"};
+                    builder.setSingleChoiceItems(items, language, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            setLanguage(i);
+                            language = getLanguage();
+                            System.out.println(language);
+                        }
+                    });
+                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
+                            map.getOverlays().add(locationOverlay);
+                            map.getOverlays().add(scaleBarOverlay);
+                            map.postInvalidate();
+                            renameUI();
+                            test_text.setText(Integer.toString(language));
+                        }
+                    });
+                    builder.show();
                 }
             });
-            Button eng = findViewById(R.id.eng);
-            eng.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    setLanguage(1);
-                    language = getLanguage();
-                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
-                    map.getOverlays().add(locationOverlay);
-                    map.getOverlays().add(scaleBarOverlay);
-                    map.postInvalidate();
-                    renameUI();
-                    test_text.setText(Integer.toString(language));
-                }
-            });
-            ////////////////////////////////////////////////////////////////////
-            ////////////////////////////////////////////////////////////////////
 
             scaleBarOverlay = new ScaleBarOverlay(map);
             scaleBarOverlay.setAlignBottom(true);
