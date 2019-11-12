@@ -2,6 +2,7 @@ package com.example.osm;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AlertDialogLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.DialogFragment;
@@ -405,7 +406,7 @@ public class MainActivity extends AppCompatActivity {
             initializeMyGPS();
 
             test_text = findViewById(R.id.test_text);
-            
+
             center_button = findViewById(R.id.center_button);
             center_button.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -456,7 +457,7 @@ public class MainActivity extends AppCompatActivity {
                     class MySearchDialog extends DialogFragment {
                         @Override
                         public Dialog onCreateDialog(Bundle savedInstanceState) {
-                            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.Theme_AppCompat_Light_Dialog_Alert);
+                            final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.Theme_AppCompat_Light_Dialog_Alert);
                             final View view = View.inflate(context, R.layout.search, null);
                             builder.setView(view);
                             builder.setTitle((language == 0) ? "Keresés" : (language == 1) ? "Search" : "[szerb]");
@@ -481,97 +482,68 @@ public class MainActivity extends AppCompatActivity {
                             for (int i = 0; i < subcategoryCounter; i++) {
                                 booleans[i] = false;
                             }
-
-
-
-
-
-
-
-                            final List<String> list = new ArrayList<>(Arrays.asList(allSubcategories));
-                            ArrayAdapter<String> test = new ArrayAdapter<>(context,
-                                    android.R.layout.simple_list_item_multiple_choice, android.R.id.text1, allSubcategories);
-                            listView.setAdapter(test);
-                            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                                @Override
-                                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                                    booleans[(int) l] = !booleans[(int) l];
-                                    System.out.println(Arrays.toString(booleans));
+                            class Item {
+                                public String subcategory;
+                                public String image;
+                                public Item(String subcategory, String image) {
+                                    this.subcategory = subcategory;
+                                    this.image = image;
                                 }
-                            });
-
-
-
-
-
-
-
-
-
-                            final Boolean[] clicked = new Boolean[1];
-                            clicked[0] = false;
-                            List<HashMap<String, String>> aList = new ArrayList<HashMap<String, String>>();
-                            for (int i = 0; i < subcategoryCounter; i++) {
-                                HashMap<String, String> hm = new HashMap<String, String>();
-                                hm.put("listview_image", Integer.toString(R.drawable.direction_arrow));
-                                hm.put("listview_checkBox", allSubcategories[i]);
-                                aList.add(hm);
                             }
-                            String[] from = {"listview_image", "listview_checkBox"};
-                            int[] to = {R.id.imageView2, R.id.checkBox};
-                            class CustomAdapter extends SimpleAdapter {
-                                LayoutInflater inflater;
-                                Context context;
-                                List<HashMap<String, String>> arrayList;
-                                public CustomAdapter(Context context, List<HashMap<String, String>> data, int resource, String[] from, int[] to) {
-                                    super(context, data, resource, from, to);
-                                    this.context = context;
-                                    this.arrayList = data;
-                                    //inflater.from(context);
+                            class ItemAdapter extends ArrayAdapter<Item> {
+                                public ItemAdapter(Context context, ArrayList<Item> items) {
+                                    super(context, 0, items);
                                 }
                                 @Override
                                 public View getView(final int position, View convertView, ViewGroup parent) {
-                                    View view = super.getView(position, convertView, parent);
-                                    final CheckBox checkBox = view.findViewById(R.id.checkBox);
-                                    final ImageView imageView = view.findViewById(R.id.imageView2);
-                                    imageView.setImageResource(R.drawable.marker);
-                                    //checkBox.setCompoundDrawablesRelativeWithIntrinsicBounds(android.R.drawable.ic_menu_save, 0, 0, 0);
-                                    checkBox.setOnClickListener(new View.OnClickListener() {
+                                    final Item item = getItem(position);
+                                    final ViewHolder holder;
+                                    LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+                                    if (convertView == null) {
+                                        convertView = inflater.inflate(R.layout.list_item, null);
+                                        holder = new ViewHolder();
+                                        holder.hc = convertView.findViewById(R.id.checkBox);
+                                        holder.hi = convertView.findViewById(R.id.imageView2);
+                                        convertView.setTag(holder);
+                                    } else {
+                                        holder = (ViewHolder) convertView.getTag();
+                                    }
+                                    holder.hi.setImageResource(android.R.drawable.ic_menu_save);
+                                    holder.hc.setText(item.subcategory);
+                                    if (booleans[position])
+                                        holder.hc.setChecked(true);
+                                    else
+                                        holder.hc.setChecked(false);
+                                    holder.hc.setOnClickListener(new View.OnClickListener() {
                                         @Override
                                         public void onClick(View view) {
-                                            //Toast.makeText(context, arrayList.get(position).get("listview_checkBox"), Toast.LENGTH_SHORT).show();
-                                            //System.out.println(arrayList.get(position));
+                                            System.out.println(position);
                                             booleans[position] = !booleans[position];
-                                            for (int i = 0; i < subcategoryCounter; i++) {
-                                                if (booleans[i]) {
-                                                    listView.setItemChecked(i, true);
-                                                } else {
-                                                    listView.setItemChecked(i, false);
-                                                }
-                                            }
-                                            //System.out.println(Arrays.toString(booleans));
-                                            //System.out.println(position);
+                                            System.out.println(Arrays.toString(booleans));
                                         }
                                     });
-                                    return view;
+                                    return convertView;
+                                }
+                                class ViewHolder {
+                                    ImageView hi;
+                                    CheckBox hc;
                                 }
                             }
-                            final CustomAdapter arrayAdapter = new CustomAdapter(context, aList,
-                                    R.layout.list_item, from, to);
-
-                            //listView.setAdapter(arrayAdapter);
-
-
-
-
-
-
-
+                            ArrayList<Item> items = new ArrayList<>();
+                            subcategoriesCursor.moveToPosition(-1);
+                            for (int i = 0; i < subcategoryCounter; i++) {
+                                subcategoriesCursor.moveToNext();
+                                Item item = new Item(subcategoriesCursor.getString(1 + language), "image");
+                                items.add(item);
+                            }
+                            ItemAdapter a = new ItemAdapter(context, items);
+                            listView.setAdapter(a);
                             listView.setDivider(null);
                             listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
                             builder.setNegativeButton((language == 0) ? "Bezárás" : (language == 1) ? "Close" : "[szerb]",
                                     new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int id) {}
+                                        public void onClick(DialogInterface dialog, int id) {
+                                        }
                                     });
                             builder.setPositiveButton((language == 0) ? "Keresés" : (language == 1) ? "Search" : "[szerb]",
                                     new DialogInterface.OnClickListener() {
@@ -591,7 +563,7 @@ public class MainActivity extends AppCompatActivity {
                                             System.out.println(showPlaces);
                                         }
                                     });
-                            builder.setCancelable(false);
+                            builder.setCancelable(true);
                             builder.show();
                             return builder.create();
                         }
