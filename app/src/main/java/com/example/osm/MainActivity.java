@@ -245,9 +245,9 @@ public class MainActivity extends AppCompatActivity {
                                         if (id <= 4) {
                                             ImageView imageView = view.findViewById(R.id.place_picture);
                                             String uri = "@drawable/p" + id.toString();
-                                            System.out.println(uri);
                                             int imageResource = view.getResources().getIdentifier(uri, null, getPackageName());
-                                            imageView.setImageDrawable(view.getResources().getDrawable(imageResource));
+                                            //imageView.setImageDrawable(view.getResources().getDrawable(imageResource));
+                                            imageView.setImageResource(imageResource);
                                         }
                                         ////////////////////////////////////////
                                         ////////////////////////////////////////
@@ -485,9 +485,9 @@ public class MainActivity extends AppCompatActivity {
                             class Item {
                                 public String subcategory;
                                 public String image;
-                                public Item(String subcategory, String image) {
+                                public Item(String subcategory, int image_id) {
                                     this.subcategory = subcategory;
-                                    this.image = image;
+                                    this.image = "@drawable/pictogram_" + image_id;
                                 }
                             }
                             class ItemAdapter extends ArrayAdapter<Item> {
@@ -497,6 +497,7 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public View getView(final int position, View convertView, ViewGroup parent) {
                                     final Item item = getItem(position);
+                                    System.out.println(item.image);
                                     final ViewHolder holder;
                                     LayoutInflater inflater = MainActivity.this.getLayoutInflater();
                                     if (convertView == null) {
@@ -508,7 +509,8 @@ public class MainActivity extends AppCompatActivity {
                                     } else {
                                         holder = (ViewHolder) convertView.getTag();
                                     }
-                                    holder.hi.setImageResource(android.R.drawable.ic_menu_save);
+                                    int imageResource = convertView.getResources().getIdentifier(item.image, null, getPackageName());
+                                    holder.hi.setImageResource(imageResource);
                                     holder.hc.setText(item.subcategory);
                                     if (booleans[position])
                                         holder.hc.setChecked(true);
@@ -517,9 +519,7 @@ public class MainActivity extends AppCompatActivity {
                                     holder.hc.setOnClickListener(new View.OnClickListener() {
                                         @Override
                                         public void onClick(View view) {
-                                            System.out.println(position);
                                             booleans[position] = !booleans[position];
-                                            System.out.println(Arrays.toString(booleans));
                                         }
                                     });
                                     return convertView;
@@ -533,7 +533,7 @@ public class MainActivity extends AppCompatActivity {
                             subcategoriesCursor.moveToPosition(-1);
                             for (int i = 0; i < subcategoryCounter; i++) {
                                 subcategoriesCursor.moveToNext();
-                                Item item = new Item(subcategoriesCursor.getString(1 + language), "image");
+                                Item item = new Item(subcategoriesCursor.getString(1 + language), i + 1);
                                 items.add(item);
                             }
                             ItemAdapter a = new ItemAdapter(context, items);
@@ -542,8 +542,7 @@ public class MainActivity extends AppCompatActivity {
                             listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
                             builder.setNegativeButton((language == 0) ? "Bezárás" : (language == 1) ? "Close" : "[szerb]",
                                     new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int id) {
-                                        }
+                                        public void onClick(DialogInterface dialog, int id) {}
                                     });
                             builder.setPositiveButton((language == 0) ? "Keresés" : (language == 1) ? "Search" : "[szerb]",
                                     new DialogInterface.OnClickListener() {
