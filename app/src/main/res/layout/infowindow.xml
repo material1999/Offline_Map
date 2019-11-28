@@ -39,14 +39,214 @@
             android:id="@+id/place_picture">
         </ImageView>
 
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/tableRow1">
+
+            <ImageView
+                android:id="@+id/infoIcon1"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginLeft="24dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon2"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon3"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon4"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon5"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon6"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon7"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon8"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon9"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon10"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon11"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/tableRow2">
+
+            <ImageView
+                android:id="@+id/infoIcon12"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginLeft="24dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon13"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon14"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon15"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon16"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon17"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/infoIcon18"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/logo" >
+            </ImageView>
+
+        </TableRow>
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:fontFamily="sans-serif"
+            android:layout_marginBottom="16dp"
+            android:layout_marginTop="16dp"
             android:text="Types as a list"
             android:textSize="10sp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
             android:id="@+id/type">
         </TextView>
 

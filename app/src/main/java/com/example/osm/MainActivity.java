@@ -2,7 +2,6 @@ package com.example.osm;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AlertDialogLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.DialogFragment;
@@ -15,24 +14,24 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
+import android.widget.TableRow;
 import android.widget.TextView;
 
 import org.osmdroid.api.IMapController;
@@ -55,9 +54,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 
 import static org.osmdroid.tileprovider.util.StreamUtils.copy;
 
@@ -73,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     Cursor placesCursor, categoriesCursor, subcategoriesCursor, subcategoriesPlacesCursor;
     int chosenId = 0;
     ArrayList<Integer> showPlaces = new ArrayList<>();
+    ArrayList<Integer> cat = new ArrayList<>();
     XYTileSource tileSource;
     int search_results;
     MapView map;
@@ -192,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
                 while (subcategoriesCursor.moveToNext()) {
                     if (placesCursor.getInt(0) == subcategoriesPlacesCursor.getInt(1) &&
                             subcategoriesPlacesCursor.getInt(2) == subcategoriesCursor.getInt(0)) {
+                        cat.add(subcategoriesCursor.getInt(0));
                         stringBuilder.append(subcategoriesCursor.getString(1 + language) + ", ");
                     }
                 }
@@ -212,9 +210,18 @@ public class MainActivity extends AppCompatActivity {
                     marker = new Marker(map) {
                         @Override
                         public boolean onLongPress(MotionEvent event, MapView mapView) {
+                            cat.clear();
                             boolean touched = hitTest(event, map);
                             if (touched) {
-                                test_text.setText(this.getId() + " long");
+                                int chosen = Integer.parseInt(this.getId());
+                                System.out.println(chosen);
+                                subcategoriesPlacesCursor.moveToPosition(-1);
+                                while (subcategoriesPlacesCursor.moveToNext()) {
+                                    if (subcategoriesPlacesCursor.getInt(1) == chosen) {
+                                        cat.add(subcategoriesPlacesCursor.getInt(2));
+                                    }
+                                }
+                                test_text.setText(chosen + " long");
                                 chosenId = Integer.parseInt(this.getId());
                                 mapController.animateTo(this.getPosition());
                                 class MyInfoWindow extends DialogFragment {
@@ -222,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
                                     public Dialog onCreateDialog(Bundle savedInstanceState) {
                                         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                                         View view = View.inflate(context, R.layout.infowindow, null);
-                                        builder.setView(view);
+                                        //builder.setView(view);
                                         builder.setNegativeButton((language == 0) ? "Bezárás" : (language == 1) ? "Close" : "[szerb]",
                                                 new DialogInterface.OnClickListener() {
                                             public void onClick(DialogInterface dialog, int id) {}
@@ -233,6 +240,7 @@ public class MainActivity extends AppCompatActivity {
                                         titleText.setText(name);
                                         TextView typeText = view.findViewById(R.id.type);
                                         typeText.setText(type);
+
 
 
 
@@ -257,9 +265,73 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+                                        
 
-
-
+                                        TableRow tr1 = view.findViewById(R.id.tableRow1);
+                                        tr1.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.FILL_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
+                                        TableRow tr2 = view.findViewById(R.id.tableRow2);
+                                        tr2.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.FILL_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
+                                        ImageView iw1 = view.findViewById(R.id.infoIcon1);
+                                        iw1.setImageResource(R.drawable.pictogram_1);
+                                        ImageView iw2 = view.findViewById(R.id.infoIcon2);
+                                        iw2.setImageResource(R.drawable.pictogram_2);
+                                        ImageView iw3 = view.findViewById(R.id.infoIcon3);
+                                        iw3.setImageResource(R.drawable.pictogram_3);
+                                        ImageView iw4 = view.findViewById(R.id.infoIcon4);
+                                        iw4.setImageResource(R.drawable.pictogram_4);
+                                        ImageView iw5 = view.findViewById(R.id.infoIcon5);
+                                        iw5.setImageResource(R.drawable.pictogram_5);
+                                        ImageView iw6 = view.findViewById(R.id.infoIcon6);
+                                        iw6.setImageResource(R.drawable.pictogram_6);
+                                        ImageView iw7 = view.findViewById(R.id.infoIcon7);
+                                        iw7.setImageResource(R.drawable.pictogram_7);
+                                        ImageView iw8 = view.findViewById(R.id.infoIcon8);
+                                        iw8.setImageResource(R.drawable.pictogram_8);
+                                        ImageView iw9 = view.findViewById(R.id.infoIcon9);
+                                        iw9.setImageResource(R.drawable.pictogram_9);
+                                        ImageView iw10 = view.findViewById(R.id.infoIcon10);
+                                        iw10.setImageResource(R.drawable.pictogram_10);
+                                        ImageView iw11 = view.findViewById(R.id.infoIcon11);
+                                        iw11.setImageResource(R.drawable.pictogram_11);
+                                        ImageView iw12 = view.findViewById(R.id.infoIcon12);
+                                        iw12.setImageResource(R.drawable.pictogram_12);
+                                        ImageView iw13 = view.findViewById(R.id.infoIcon13);
+                                        iw13.setImageResource(R.drawable.pictogram_13);
+                                        ImageView iw14 = view.findViewById(R.id.infoIcon14);
+                                        iw14.setImageResource(R.drawable.pictogram_14);
+                                        ImageView iw15 = view.findViewById(R.id.infoIcon15);
+                                        iw15.setImageResource(R.drawable.pictogram_15);
+                                        ImageView iw16 = view.findViewById(R.id.infoIcon16);
+                                        iw16.setImageResource(R.drawable.pictogram_16);
+                                        ImageView iw17 = view.findViewById(R.id.infoIcon17);
+                                        iw17.setImageResource(R.drawable.pictogram_17);
+                                        ImageView iw18 = view.findViewById(R.id.infoIcon18);
+                                        iw18.setImageResource(R.drawable.pictogram_18);
+                                        for (int i = 1; i <= 18; i++) {
+                                            if (!(cat.contains(i))) {
+                                                switch (i) {
+                                                    case 1: iw1.setColorFilter(Color.LTGRAY); break;
+                                                    case 2: iw2.setColorFilter(Color.LTGRAY); break;
+                                                    case 3: iw3.setColorFilter(Color.LTGRAY); break;
+                                                    case 4: iw4.setColorFilter(Color.LTGRAY); break;
+                                                    case 5: iw5.setColorFilter(Color.LTGRAY); break;
+                                                    case 6: iw6.setColorFilter(Color.LTGRAY); break;
+                                                    case 7: iw7.setColorFilter(Color.LTGRAY); break;
+                                                    case 8: iw8.setColorFilter(Color.LTGRAY); break;
+                                                    case 9: iw9.setColorFilter(Color.LTGRAY); break;
+                                                    case 10: iw10.setColorFilter(Color.LTGRAY); break;
+                                                    case 11: iw11.setColorFilter(Color.LTGRAY); break;
+                                                    case 12: iw12.setColorFilter(Color.LTGRAY); break;
+                                                    case 13: iw13.setColorFilter(Color.LTGRAY); break;
+                                                    case 14: iw14.setColorFilter(Color.LTGRAY); break;
+                                                    case 15: iw15.setColorFilter(Color.LTGRAY); break;
+                                                    case 16: iw16.setColorFilter(Color.LTGRAY); break;
+                                                    case 17: iw17.setColorFilter(Color.LTGRAY); break;
+                                                    case 18: iw18.setColorFilter(Color.LTGRAY); break;
+                                                }
+                                            }
+                                        }
+                                        builder.setView(view);
                                         builder.show();
                                         return builder.create();
                                     }
@@ -302,7 +374,6 @@ public class MainActivity extends AppCompatActivity {
                     });
                     marker.setId(id.toString());
                     marker.setTitle(name);
-                    marker.setSnippet(type);
                     switch (language) {
                         case 0:
                             marker.setSubDescription("További információkért nyomjon hosszan a megfelelő pin-re!");
@@ -504,7 +575,7 @@ public class MainActivity extends AppCompatActivity {
                                         convertView = inflater.inflate(R.layout.list_item, null);
                                         holder = new ViewHolder();
                                         holder.hc = convertView.findViewById(R.id.checkBox);
-                                        holder.hi = convertView.findViewById(R.id.imageView2);
+                                        holder.hi = convertView.findViewById(R.id.checkBox_icon);
                                         convertView.setTag(holder);
                                     } else {
                                         holder = (ViewHolder) convertView.getTag();
