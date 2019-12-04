@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-                                        
+
 
                                         TableRow tr1 = view.findViewById(R.id.tableRow1);
                                         tr1.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.FILL_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
