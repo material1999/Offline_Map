@@ -208,8 +208,16 @@ public class MainActivity extends AppCompatActivity {
                     final Integer id = placesCursor.getInt(0);
                     Double coordinatesX = placesCursor.getDouble(1);
                     Double coordinatesY = placesCursor.getDouble(2);
+                    final String picture = placesCursor.getString(3);
                     final String name = placesCursor.getString(4 + language);
                     String descriptionHelper = "<html>" + placesCursor.getString(7 + language);
+                    if (descriptionHelper.equals("<html>")) {
+                        switch (language) {
+                            case 0: descriptionHelper += "Sajnos nem érhető el további információ erről a helyről."; break;
+                            case 1: descriptionHelper += "Unfortunately there is no information available for this place."; break;
+                            case 2: descriptionHelper += "Unfortunately there is no information available for this place."; break;
+                        }
+                    }
                     final String description = descriptionHelper + "</html>";
                     marker = new Marker(map) {
                         @Override
@@ -217,17 +225,20 @@ public class MainActivity extends AppCompatActivity {
                             cat.clear();
                             boolean touched = hitTest(event, map);
                             if (touched) {
-                                int chosen = Integer.parseInt(this.getId());
-                                System.out.println(chosen);
+                                chosenId = Integer.parseInt(this.getId());
                                 subcategoriesPlacesCursor.moveToPosition(-1);
                                 while (subcategoriesPlacesCursor.moveToNext()) {
-                                    if (subcategoriesPlacesCursor.getInt(1) == chosen) {
+                                    if (subcategoriesPlacesCursor.getInt(1) == chosenId) {
                                         cat.add(subcategoriesPlacesCursor.getInt(2));
                                     }
                                 }
-                                test_text.setText(chosen + " long");
-                                chosenId = Integer.parseInt(this.getId());
+                                test_text.setText(chosenId + " long");
                                 mapController.animateTo(this.getPosition());
+                                map.getOverlays().clear();
+                                addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
+                                map.getOverlays().add(locationOverlay);
+                                map.getOverlays().add(scaleBarOverlay);
+                                map.postInvalidate();
                                 class MyInfoWindow extends DialogFragment {
                                     @Override
                                     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -243,33 +254,12 @@ public class MainActivity extends AppCompatActivity {
                                         titleText.setText(name);
                                         TextView typeText = view.findViewById(R.id.type);
                                         typeText.setText(type);
-
-
-
-
-
-
-
-
-                                        ////////////////////////////////////////
-                                        ////////////////////////////////////////
-                                        if (id <= 4) {
+                                        if (!picture.equals("none")) {
                                             ImageView imageView = view.findViewById(R.id.place_picture);
-                                            String uri = "@drawable/p" + id.toString();
+                                            String uri = "@drawable/" + picture;
                                             int imageResource = view.getResources().getIdentifier(uri, null, getPackageName());
-                                            //imageView.setImageDrawable(view.getResources().getDrawable(imageResource));
                                             imageView.setImageResource(imageResource);
                                         }
-                                        ////////////////////////////////////////
-                                        ////////////////////////////////////////
-
-
-
-
-
-
-
-
                                         TableRow tr1 = view.findViewById(R.id.tableRow1);
                                         tr1.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.FILL_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
                                         TableRow tr2 = view.findViewById(R.id.tableRow2);
@@ -385,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
                             marker.setSubDescription("For more information, please long press the desired pin!");
                             break;
                         case 2:
-                            marker.setSubDescription("[szerb]");
+                            marker.setSubDescription("For more information, please long press the desired pin!");
                             break;
                     }
                     added++;
@@ -538,7 +528,7 @@ public class MainActivity extends AppCompatActivity {
                             TextView searchText = view.findViewById(R.id.search_text);
                             searchText.setText((language == 0) ? "Kérem válassza ki a megjeleníteni kívánt kategóriákat:" :
                                 (language == 1) ? "Please choose the categories you want to be displayed:" :
-                                "[szerb]");
+                                "Please choose the categories you want to be displayed:");
                             subcategoriesCursor.moveToPosition(-1);
                             int counter = 0;
                             while (subcategoriesCursor.moveToNext()) {
@@ -571,7 +561,6 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public View getView(final int position, View convertView, ViewGroup parent) {
                                     final Item item = getItem(position);
-                                    System.out.println(item.image);
                                     final ViewHolder holder;
                                     LayoutInflater inflater = MainActivity.this.getLayoutInflater();
                                     if (convertView == null) {
@@ -633,7 +622,6 @@ public class MainActivity extends AppCompatActivity {
                                             map.getOverlays().add(scaleBarOverlay);
                                             map.postInvalidate();
                                             test_text.setText(Integer.toString(search_results));
-                                            System.out.println(showPlaces);
                                         }
                                     });
                             builder.setCancelable(true);
@@ -657,7 +645,6 @@ public class MainActivity extends AppCompatActivity {
                         public void onClick(DialogInterface dialogInterface, int i) {
                             setLanguage(i);
                             language = getLanguage();
-                            System.out.println(language);
                         }
                     });
                     builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -668,7 +655,6 @@ public class MainActivity extends AppCompatActivity {
                             map.getOverlays().add(scaleBarOverlay);
                             map.postInvalidate();
                             renameUI();
-                            test_text.setText(Integer.toString(language));
                         }
                     });
                     builder.show();
