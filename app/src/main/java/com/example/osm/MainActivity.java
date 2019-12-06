@@ -11,7 +11,6 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -23,8 +22,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Html;
-import android.text.method.LinkMovementMethod;
-import android.text.util.Linkify;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -185,6 +182,7 @@ public class MainActivity extends AppCompatActivity {
         map.getOverlays().clear();
         placesCursor.moveToPosition(-1);
         while (placesCursor.moveToNext()) {
+            cat.clear();
             StringBuilder stringBuilder = new StringBuilder();
             subcategoriesPlacesCursor.moveToPosition(-1);
             while (subcategoriesPlacesCursor.moveToNext()) {
@@ -234,7 +232,6 @@ public class MainActivity extends AppCompatActivity {
                                 }
                                 test_text.setText(chosenId + " long");
                                 mapController.animateTo(this.getPosition());
-                                map.getOverlays().clear();
                                 addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
                                 map.getOverlays().add(locationOverlay);
                                 map.getOverlays().add(scaleBarOverlay);
@@ -242,6 +239,13 @@ public class MainActivity extends AppCompatActivity {
                                 class MyInfoWindow extends DialogFragment {
                                     @Override
                                     public Dialog onCreateDialog(Bundle savedInstanceState) {
+                                        cat.clear();
+                                        subcategoriesPlacesCursor.moveToPosition(-1);
+                                        while (subcategoriesPlacesCursor.moveToNext()) {
+                                            if (subcategoriesPlacesCursor.getInt(1) == chosenId) {
+                                                cat.add(subcategoriesPlacesCursor.getInt(2));
+                                            }
+                                        }
                                         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                                         View view = View.inflate(context, R.layout.infowindow, null);
                                         builder.setNegativeButton((language == 0) ? "Bezárás" : (language == 1) ? "Close" : "Близу",
