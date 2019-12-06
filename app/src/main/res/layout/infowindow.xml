@@ -14,8 +14,8 @@
             android:layout_height="wrap_content"
             app:fontFamily="sans-serif"
             android:text="Title"
-            android:textSize="30sp"
-            android:layout_margin="20dp"
+            android:textSize="25sp"
+            android:layout_margin="20sp"
             android:id="@+id/title">
         </TextView>
 
@@ -24,17 +24,19 @@
             android:layout_height="wrap_content"
             app:fontFamily="sans-serif"
             android:text="Description as a longer text, giving information about the selected place."
-            android:textSize="20sp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
+            android:textSize="15sp"
+            android:layout_marginLeft="20sp"
+            android:layout_marginRight="20sp"
             android:id="@+id/description">
         </TextView>
 
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
+            android:layout_marginLeft="20sp"
+            android:layout_marginRight="20sp"
+            android:layout_marginTop="10sp"
+            android:layout_marginBottom="10sp"
             android:src="@mipmap/logo"
             android:id="@+id/place_picture">
         </ImageView>
@@ -46,122 +48,122 @@
 
             <ImageView
                 android:id="@+id/infoIcon1"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginLeft="24dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginBottom="16sp"
+                android:layout_marginTop="16sp"
+                android:layout_marginStart="24sp"
+                android:layout_marginLeft="24sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon2"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginBottom="16sp"
+                android:layout_marginTop="16sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon3"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginBottom="16sp"
+                android:layout_marginTop="16sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon4"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginBottom="16sp"
+                android:layout_marginTop="16sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon5"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginBottom="16sp"
+                android:layout_marginTop="16sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon6"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginBottom="16sp"
+                android:layout_marginTop="16sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon7"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginBottom="16sp"
+                android:layout_marginTop="16sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon8"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginBottom="16sp"
+                android:layout_marginTop="16sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon9"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginBottom="16sp"
+                android:layout_marginTop="16sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon10"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginBottom="16sp"
+                android:layout_marginTop="16sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon11"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginBottom="16sp"
+                android:layout_marginTop="16sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
@@ -174,64 +176,64 @@
 
             <ImageView
                 android:id="@+id/infoIcon12"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginLeft="24dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginStart="24sp"
+                android:layout_marginLeft="24sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon13"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon14"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon15"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon16"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon17"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
             <ImageView
                 android:id="@+id/infoIcon18"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_marginStart="4sp"
+                android:layout_marginLeft="4sp"
                 app:srcCompat="@mipmap/logo" >
             </ImageView>
 
@@ -241,12 +243,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:fontFamily="sans-serif"
-            android:layout_marginBottom="16dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16sp"
+            android:layout_marginTop="16sp"
             android:text="Types as a list"
             android:textSize="10sp"
-            android:layout_marginLeft="24dp"
-            android:layout_marginRight="24dp"
+            android:layout_marginLeft="24sp"
+            android:layout_marginRight="24sp"
             android:id="@+id/type">
         </TextView>
 

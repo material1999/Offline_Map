@@ -11,17 +11,20 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -125,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
-        search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
+        //search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
         map.getOverlays().add(locationOverlay);
         map.getOverlays().add(scaleBarOverlay);
         InfoWindow.closeAllInfoWindowsOn(map);
@@ -206,7 +209,8 @@ public class MainActivity extends AppCompatActivity {
                     Double coordinatesX = placesCursor.getDouble(1);
                     Double coordinatesY = placesCursor.getDouble(2);
                     final String name = placesCursor.getString(4 + language);
-                    final String description = placesCursor.getString(7 + language);
+                    String descriptionHelper = "<html>" + placesCursor.getString(7 + language);
+                    final String description = descriptionHelper + "</html>";
                     marker = new Marker(map) {
                         @Override
                         public boolean onLongPress(MotionEvent event, MapView mapView) {
@@ -229,13 +233,12 @@ public class MainActivity extends AppCompatActivity {
                                     public Dialog onCreateDialog(Bundle savedInstanceState) {
                                         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                                         View view = View.inflate(context, R.layout.infowindow, null);
-                                        //builder.setView(view);
-                                        builder.setNegativeButton((language == 0) ? "Bezárás" : (language == 1) ? "Close" : "[szerb]",
+                                        builder.setNegativeButton((language == 0) ? "Bezárás" : (language == 1) ? "Close" : "Близу",
                                                 new DialogInterface.OnClickListener() {
                                             public void onClick(DialogInterface dialog, int id) {}
                                         });
                                         TextView descriptionText = view.findViewById(R.id.description);
-                                        descriptionText.setText(description);
+                                        descriptionText.setText(Html.fromHtml(description));
                                         TextView titleText = view.findViewById(R.id.title);
                                         titleText.setText(name);
                                         TextView typeText = view.findViewById(R.id.type);
@@ -423,11 +426,11 @@ public class MainActivity extends AppCompatActivity {
                 change_language_button.setText("Language");
                 break;
             case 2:
-                center_button.setText("[szerb]");
-                all_button.setText("[szerb]");
-                none_button.setText("[szerb]");
-                search_button.setText("[szerb]");
-                change_language_button.setText("[szerb]");
+                center_button.setText("Центар");
+                all_button.setText("све");
+                none_button.setText("ниједан");
+                search_button.setText("Претрага");
+                change_language_button.setText("Језик");
                 break;
         }
     }
@@ -531,7 +534,7 @@ public class MainActivity extends AppCompatActivity {
                             final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.Theme_AppCompat_Light_Dialog_Alert);
                             final View view = View.inflate(context, R.layout.search, null);
                             builder.setView(view);
-                            builder.setTitle((language == 0) ? "Keresés" : (language == 1) ? "Search" : "[szerb]");
+                            builder.setTitle((language == 0) ? "Keresés" : (language == 1) ? "Search" : "Претрага");
                             TextView searchText = view.findViewById(R.id.search_text);
                             searchText.setText((language == 0) ? "Kérem válassza ki a megjeleníteni kívánt kategóriákat:" :
                                 (language == 1) ? "Please choose the categories you want to be displayed:" :
@@ -611,11 +614,11 @@ public class MainActivity extends AppCompatActivity {
                             listView.setAdapter(a);
                             listView.setDivider(null);
                             listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-                            builder.setNegativeButton((language == 0) ? "Bezárás" : (language == 1) ? "Close" : "[szerb]",
+                            builder.setNegativeButton((language == 0) ? "Bezárás" : (language == 1) ? "Close" : "Близу",
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {}
                                     });
-                            builder.setPositiveButton((language == 0) ? "Keresés" : (language == 1) ? "Search" : "[szerb]",
+                            builder.setPositiveButton((language == 0) ? "Keresés" : (language == 1) ? "Search" : "Претрага",
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
                                             showPlaces.clear();
@@ -647,8 +650,8 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.Theme_AppCompat_Light_Dialog_Alert);
-                    builder.setTitle((language == 0) ? "Válasszon nyelvet:" : (language == 1) ? "Choose language:" : "[szerb]");
-                    String[] items = {"Magyar", "English", "[szerb]"};
+                    builder.setTitle((language == 0) ? "Válasszon nyelvet:" : (language == 1) ? "Choose language:" : "Изабери језик");
+                    String[] items = {"Magyar", "English", "Српски"};
                     builder.setSingleChoiceItems(items, language, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
