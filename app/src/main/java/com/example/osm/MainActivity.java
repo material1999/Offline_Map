@@ -136,21 +136,19 @@ public class MainActivity extends AppCompatActivity {
     public XYTileSource initializeMyMap() {
         File tileDir = Configuration.getInstance().getOsmdroidBasePath();
         File tileFile = new File(tileDir, "map.sqlite");
-        if (!tileFile.exists()) {
-            try {
-                InputStream in = getAssets().open("map.sqlite");
-                OutputStream out = new FileOutputStream(tileFile);
-                copy(in, out);
-                in.close();
-                out.flush();
-                out.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            InputStream in = getAssets().open("map.sqlite");
+            OutputStream out = new FileOutputStream(tileFile);
+            copy(in, out);
+            in.close();
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         XYTileSource tileSource = new XYTileSource(
                 "4uMaps",
-                10,
+                8,
                 15,
                 256,
                 ".png",
@@ -162,11 +160,11 @@ public class MainActivity extends AppCompatActivity {
         map.setUseDataConnection(false);
         map.setTileSource(tileSource);
         map.setMaxZoomLevel(15.0);
-        map.setMinZoomLevel(12.0);
+        map.setMinZoomLevel(10.0);
         map.setMultiTouchControls(true);
         map.setClickable(true);
         mapController = map.getController();
-        mapController.setZoom(12.0);
+        mapController.setZoom(11.0);
     }
 
     @SuppressLint("MissingPermission")
@@ -691,10 +689,10 @@ public class MainActivity extends AppCompatActivity {
             //map.computeScroll();
 
             //test_text.setText(Double.toString(map.getBoundingBox().getLonEast()));
-            map.setScrollableAreaLimitLatitude(46.55, 46.08, 0);
-            map.setScrollableAreaLimitLongitude(19.78, 20.38, 0);
+            map.setScrollableAreaLimitLatitude(47, 45, 0);
+            map.setScrollableAreaLimitLongitude(19, 21, 0);
 
-            GeoPoint startPoint = new GeoPoint(46.253, 20.1414);
+            GeoPoint startPoint = new GeoPoint(46, 20.1);
             mapController.setCenter(startPoint);
 
             renameUI();
