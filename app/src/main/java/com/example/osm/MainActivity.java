@@ -74,8 +74,7 @@ public class MainActivity extends AppCompatActivity {
     int search_results;
     MapView map;
     Marker marker;
-    TextView test_text;
-    Button center_button, all_button, none_button, search_button, change_language_button;
+    Button center_button, search_button, change_language_button;
     Context context;
     MyLocationNewOverlay locationOverlay;
     LocationManager locationManager;
@@ -228,7 +227,6 @@ public class MainActivity extends AppCompatActivity {
                                         cat.add(subcategoriesPlacesCursor.getInt(2));
                                     }
                                 }
-                                test_text.setText(chosenId + " long");
                                 mapController.animateTo(this.getPosition());
                                 addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
                                 map.getOverlays().add(locationOverlay);
@@ -363,7 +361,6 @@ public class MainActivity extends AppCompatActivity {
                             map.getOverlays().add(locationOverlay);
                             map.getOverlays().add(scaleBarOverlay);
                             map.postInvalidate();
-                            test_text.setText(marker.getId());
                             return false;
                         }
                     });
@@ -405,22 +402,16 @@ public class MainActivity extends AppCompatActivity {
         switch (language) {
             case 0:
                 center_button.setText("Középre");
-                all_button.setText("Minden");
-                none_button.setText("Semmi");
                 search_button.setText("Keresés");
                 change_language_button.setText("Nyelv");
                 break;
             case 1:
                 center_button.setText("Center");
-                all_button.setText("All");
-                none_button.setText("None");
                 search_button.setText("Search");
                 change_language_button.setText("Language");
                 break;
             case 2:
                 center_button.setText("Центар");
-                all_button.setText("све");
-                none_button.setText("ниједан");
                 search_button.setText("Претрага");
                 change_language_button.setText("Језик");
                 break;
@@ -471,8 +462,6 @@ public class MainActivity extends AppCompatActivity {
             loadMyMap(tileSource);
             initializeMyGPS();
 
-            test_text = findViewById(R.id.test_text);
-
             center_button = findViewById(R.id.center_button);
             center_button.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -483,37 +472,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                     map.getOverlays().remove(scaleBarOverlay);
                     map.getOverlays().add(scaleBarOverlay);
-                }
-            });
-            all_button = findViewById(R.id.all);
-            all_button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    chosenId = 0;
-                    subcategoriesCursor.moveToPosition(-1);
-                    showPlaces.clear();
-                    while (subcategoriesCursor.moveToNext()) {
-                        showPlaces.add(subcategoriesCursor.getInt(0));
-                    }
-                    search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
-                    map.getOverlays().add(locationOverlay);
-                    map.getOverlays().add(scaleBarOverlay);
-                    map.postInvalidate();
-                    test_text.setText(Integer.toString(search_results));
-                }
-            });
-            none_button = findViewById(R.id.none);
-            none_button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    chosenId = 0;
-                    showPlaces.clear();
-                    search_results = 0;
-                    map.getOverlays().clear();
-                    map.getOverlays().add(locationOverlay);
-                    map.getOverlays().add(scaleBarOverlay);
-                    map.postInvalidate();
-                    test_text.setText(Integer.toString(search_results));
                 }
             });
             search_button = findViewById(R.id.search_button);
@@ -623,7 +581,6 @@ public class MainActivity extends AppCompatActivity {
                                             map.getOverlays().add(locationOverlay);
                                             map.getOverlays().add(scaleBarOverlay);
                                             map.postInvalidate();
-                                            test_text.setText(Integer.toString(search_results));
                                         }
                                     });
                             builder.setCancelable(true);
@@ -685,10 +642,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            //map.setScrollableAreaLimitDouble(map.getBoundingBox());
-            //map.computeScroll();
-
-            //test_text.setText(Double.toString(map.getBoundingBox().getLonEast()));
             map.setScrollableAreaLimitLatitude(47, 45, 0);
             map.setScrollableAreaLimitLongitude(19, 21, 0);
 
@@ -704,17 +657,8 @@ public class MainActivity extends AppCompatActivity {
             }
             search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
 
-            test_text.setText(Integer.toString(search_results));
-
             map.getOverlays().add(locationOverlay);
             map.getOverlays().add(scaleBarOverlay);
-
-            /*
-            RotationGestureOverlay rotationGestureOverlay = new RotationGestureOverlay(map);
-            rotationGestureOverlay.setEnabled(true);
-            map.getOverlays().add(rotationGestureOverlay);
-            */
-
         } else {
             System.exit(1);
         }
