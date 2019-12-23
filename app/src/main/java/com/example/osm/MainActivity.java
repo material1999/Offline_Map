@@ -652,9 +652,11 @@ public class MainActivity extends AppCompatActivity {
 
             subcategoriesCursor.moveToPosition(-1);
             showPlaces.clear();
+            /*
             while (subcategoriesCursor.moveToNext()) {
                 showPlaces.add(subcategoriesCursor.getInt(0));
             }
+            */
             search_results = addMarkers(placesCursor, subcategoriesPlacesCursor, subcategoriesCursor);
 
             map.getOverlays().add(locationOverlay);
